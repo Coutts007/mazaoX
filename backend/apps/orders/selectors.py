@@ -1,13 +1,15 @@
 """Read interface of the orders domain."""
 
 import uuid
+from datetime import timedelta
 from dataclasses import dataclass
 from decimal import Decimal
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
 
-from apps.orders.models import Order
+from apps.orders.models import Order, OrderStatus
 from core.actor import Actor
 
 
@@ -20,6 +22,13 @@ class OrderSnapshot:
     farmer_id: uuid.UUID
     status: str
     total_amount: Decimal
+    payment_due_by: object  # datetime while pending_payment, else None
+
+
+def payment_due_by(order: Order):
+    if order.status != OrderStatus.PENDING_PAYMENT:
+        return None
+    return order.created_at + timedelta(minutes=settings.RESERVATION_TTL_MINUTES)
 
 
 def _participant(order: Order, actor: Actor) -> bool:
@@ -43,7 +52,7 @@ def get_order_snapshot(order_id) -> OrderSnapshot | None:
     o = get_order(order_id)
     if o is None:
         return None
-    return OrderSnapshot(o.id, o.buyer_id, o.farmer_id, o.status, o.total_amount)
+    return OrderSnapshot(o.id, o.buyer_id, o.farmer_id, o.status, o.total_amount, payment_due_by(o))
 
 
 def list_orders(actor: Actor, status: str = "") -> QuerySet[Order]:

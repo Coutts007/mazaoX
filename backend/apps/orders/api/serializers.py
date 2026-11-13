@@ -1,9 +1,7 @@
-from datetime import timedelta
-
-from django.conf import settings
 from rest_framework import serializers
 
-from apps.orders.models import DeliveryMethod, Order, OrderLine, OrderStatus, OrderStatusHistory
+from apps.orders import selectors
+from apps.orders.models import DeliveryMethod, Order, OrderLine, OrderStatusHistory
 
 
 class OrderItemInputSerializer(serializers.Serializer):
@@ -42,9 +40,7 @@ class OrderSerializer(serializers.ModelSerializer):
         return "KSh"
 
     def get_payment_due_by(self, obj):
-        if obj.status != OrderStatus.PENDING_PAYMENT:
-            return None
-        return obj.created_at + timedelta(minutes=settings.RESERVATION_TTL_MINUTES)
+        return selectors.payment_due_by(obj)
 
 
 class CancelSerializer(serializers.Serializer):

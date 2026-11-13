@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "apps.catalogue",
     "apps.inventory",
     "apps.orders",
+    "apps.payments",
 ]
 
 MIDDLEWARE = [
@@ -115,3 +116,6 @@ SIMPLE_JWT = {
 
 # Inventory: how long an unpaid order holds stock (minutes).
 RESERVATION_TTL_MINUTES = env.int("RESERVATION_TTL_MINUTES", default=15)
+
+# Payments are SIMULATED. The completion endpoint is a demo tool: keep it off in any hosted environment.
+PAYMENT_SIMULATION_ENABLED = env.bool("PAYMENT_SIMULATION_ENABLED", default=False)
