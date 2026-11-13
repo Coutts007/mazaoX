@@ -90,7 +90,7 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
-MEDIA_ROOT = REPO_ROOT / "media"  # uploads live on disk, never in PostgreSQL
+MEDIA_ROOT = env("MEDIA_ROOT", default=str(REPO_ROOT / "media"))  # uploads live on disk, never in PostgreSQL
 
 AUTH_USER_MODEL = "identity.User"
 
