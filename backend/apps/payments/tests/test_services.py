@@ -101,12 +101,11 @@ def test_cancelled_order_fails_payment_without_touching_stock(shop):
     assert inv.get_availability(shop["listing"].id).on_hand == D("100")
 
 
-def test_expired_reservation_fails_payment_and_leaves_order_unpaid(shop):
-    from apps.inventory.models import Reservation
-
+def test_expired_reservation_fails_payment_and_leaves_order_unpaid(shop, monkeypatch):
     order = shop["place"]("10")
     attempt, _ = services.start_simulated_payment(buyer(shop), order.id)
-    Reservation.objects.update(expires_at=timezone.now() - timedelta(seconds=1))  # test-only time travel
+    later = timezone.now() + timedelta(minutes=16)  # time travel past the 15-minute reservation window
+    monkeypatch.setattr("apps.inventory.services.timezone.now", lambda: later)
     done = services.complete_simulated_payment(buyer(shop), attempt.id, "success")
     assert done.status == "failed" and done.failure_reason == "reservation_expired"
     assert orders.get_order(order.id).status == "pending_payment"
