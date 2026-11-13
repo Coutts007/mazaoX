@@ -52,6 +52,7 @@ def _domain_response(exc):
     )
     details = [{"field": exc.field, "message": exc.message}] if exc.field else []
     message = default if exc.field else (exc.message or default)
+    code = exc.code or code
     return Response({"error": {"code": code, "message": message, "details": details}}, status=http_status)
 
 

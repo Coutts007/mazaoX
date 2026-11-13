@@ -2,10 +2,11 @@
 
 
 class DomainError(Exception):
-    def __init__(self, message: str = "", field: str = ""):
+    def __init__(self, message: str = "", field: str = "", code: str = ""):
         super().__init__(message)
         self.message = message
         self.field = field
+        self.code = code  # optional machine-readable code overriding the HTTP default
 
 
 class NotFoundError(DomainError):

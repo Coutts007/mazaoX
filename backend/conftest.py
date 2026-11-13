@@ -48,3 +48,23 @@ def auth_client(db):
         return client
 
     return _client
+
+
+@pytest.fixture
+def make_listing(db):
+    """Create an active listing through the catalogue service for the given farmer."""
+    from datetime import date
+
+    from apps.catalogue import services
+    from apps.catalogue.models import Category
+    from core.actor import Actor
+
+    def _make(farmer, **kw):
+        data = dict(category_id=Category.objects.get(slug="tomatoes").id, produce_name="Tomatoes",
+                    price_per_unit="85.00", quantity_unit="kg", county="Kiambu", harvest_date=date.today())
+        data.update(kw)
+        from decimal import Decimal
+        data["price_per_unit"] = Decimal(str(data["price_per_unit"]))
+        return services.create_listing(Actor.from_user(farmer), data)
+
+    return _make
