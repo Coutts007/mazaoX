@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "apps.identity",
     "apps.profiles",
     "apps.catalogue",
+    "apps.inventory",
 ]
 
 MIDDLEWARE = [
@@ -110,3 +111,6 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": False,  # rotation is done explicitly in the refresh view
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+# Inventory: how long an unpaid order holds stock (minutes).
+RESERVATION_TTL_MINUTES = env.int("RESERVATION_TTL_MINUTES", default=15)
