@@ -45,11 +45,21 @@ def api_exception_handler(exc, context):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
+    # Views without an authenticator (login, refresh) have no WWW-Authenticate header, so DRF
+    # downgrades 401 to 403. Authentication failures must always be 401.
+    if isinstance(exc, (exceptions.AuthenticationFailed, exceptions.NotAuthenticated)):
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+
     if isinstance(exc, exceptions.ValidationError):
         code, message, details = "VALIDATION_ERROR", "The submitted information is invalid.", _flatten(exc.detail)
     else:
         code = _CODES.get(response.status_code, "ERROR")
-        message = str(exc.detail) if hasattr(exc, "detail") and not isinstance(exc.detail, (dict, list)) else "Request failed."
+        if response.status_code == status.HTTP_401_UNAUTHORIZED and isinstance(exc.detail, dict):
+            message = "Authentication credentials are invalid or expired."
+        elif isinstance(exc.detail, (dict, list)):
+            message = "Request failed."
+        else:
+            message = str(exc.detail)
         details = []
     response.data = {"error": {"code": code, "message": message, "details": details}}
     return response
