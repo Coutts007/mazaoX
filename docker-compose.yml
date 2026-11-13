@@ -43,7 +43,7 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: "5432"
-    command: ["sh", "-c", "while true; do python manage.py expire_reservations; sleep 60; done"]
+    command: ["sh", "-c", "while true; do python manage.py expire_reservations; python manage.py expire_orders; sleep 60; done"]
     depends_on:
       backend:
         condition: service_healthy
