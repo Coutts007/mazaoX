@@ -8,7 +8,6 @@ from django.utils import timezone
 from apps.inventory import selectors as inv
 from apps.orders import selectors as orders
 from apps.orders import services as order_services
-from apps.orders.models import Order
 from apps.payments import services
 from core.actor import Actor
 from core.errors import ConflictError, ForbiddenError, InvalidInputError, NotFoundError
@@ -48,9 +47,10 @@ def test_start_authorization_and_state(shop):
     assert e.value.code == "ORDER_NOT_PAYABLE"
 
 
-def test_start_rejected_after_payment_window(shop):
+def test_start_rejected_after_payment_window(shop, monkeypatch):
     order = shop["place"]()
-    Order.objects.filter(pk=order.id).update(created_at=timezone.now() - timedelta(minutes=30))
+    later = timezone.now() + timedelta(minutes=30)
+    monkeypatch.setattr("apps.payments.services.timezone.now", lambda: later)
     with pytest.raises(ConflictError) as e:
         services.start_simulated_payment(buyer(shop), order.id)
     assert e.value.code == "PAYMENT_WINDOW_ELAPSED"
