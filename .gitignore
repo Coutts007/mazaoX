@@ -1,0 +1,37 @@
+# Secrets and local config
+.env
+.env.*
+!.env.example
+
+# Documentation lives outside this repository; only README.md is published
+docs/
+
+# Uploaded media and local storage
+media/
+uploads/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+build/
+coverage/
+
+# Docker / data
+pgdata/
+rabbitmq-data/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+*.swp
