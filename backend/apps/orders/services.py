@@ -11,6 +11,7 @@ from datetime import timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
@@ -168,3 +169,26 @@ def expire_unpaid_orders(now=None) -> int:
             _record(order, OrderStatus.PENDING_PAYMENT, OrderStatus.EXPIRED, None, "Payment window elapsed")
             count += 1
     return count
+
+
+@transaction.atomic
+def confirm_payment(order_id, reference: str = "") -> Order:
+    """Mark an order paid and commit its stock reservations. Called only by trusted backend code (Payments).
+
+    All-or-nothing: if any reservation cannot be committed (e.g. expired) nothing changes and a
+    ConflictError is raised. Idempotent for an order that is already paid.
+    """
+    try:
+        order = Order.objects.select_for_update().get(pk=order_id)
+    except (Order.DoesNotExist, ValueError, ValidationError) as exc:
+        raise NotFoundError("Order not found.") from exc
+    if order.status == OrderStatus.PAID:
+        return selectors.get_order(order.id)
+    if order.status != OrderStatus.PENDING_PAYMENT:
+        raise ConflictError(f"A {order.get_status_display().lower()} order cannot be paid.", code="ORDER_NOT_PAYABLE")
+    for line in order.lines.all():
+        inventory.commit_reservation(line.reservation_id)
+    order.status = OrderStatus.PAID
+    order.save(update_fields=["status", "updated_at"])
+    _record(order, OrderStatus.PENDING_PAYMENT, OrderStatus.PAID, None, f"Payment confirmed {reference}".strip())
+    return selectors.get_order(order.id)
