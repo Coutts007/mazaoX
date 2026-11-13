@@ -23,6 +23,8 @@ class OrderSnapshot:
     status: str
     total_amount: Decimal
     payment_due_by: object  # datetime while pending_payment, else None
+    delivery_method: str
+    delivery_location: str
 
 
 def payment_due_by(order: Order):
@@ -52,7 +54,8 @@ def get_order_snapshot(order_id) -> OrderSnapshot | None:
     o = get_order(order_id)
     if o is None:
         return None
-    return OrderSnapshot(o.id, o.buyer_id, o.farmer_id, o.status, o.total_amount, payment_due_by(o))
+    return OrderSnapshot(o.id, o.buyer_id, o.farmer_id, o.status, o.total_amount, payment_due_by(o),
+                         o.delivery_method, o.delivery_location)
 
 
 def list_orders(actor: Actor, status: str = "") -> QuerySet[Order]:
