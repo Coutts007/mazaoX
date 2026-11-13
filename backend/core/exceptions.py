@@ -6,6 +6,8 @@ from rest_framework import exceptions, status
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
+from core import errors
+
 logger = logging.getLogger(__name__)
 
 _CODES = {
@@ -36,7 +38,26 @@ def _flatten(detail, prefix=""):
     return out
 
 
+_DOMAIN = {
+    errors.NotFoundError: (status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Resource not found."),
+    errors.ForbiddenError: (status.HTTP_403_FORBIDDEN, "FORBIDDEN", "You do not have permission to do this."),
+    errors.ConflictError: (status.HTTP_409_CONFLICT, "CONFLICT", "The request conflicts with the current state."),
+    errors.InvalidInputError: (status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR", "The submitted information is invalid."),
+}
+
+
+def _domain_response(exc):
+    http_status, code, default = _DOMAIN[type(exc)] if type(exc) in _DOMAIN else next(
+        v for k, v in _DOMAIN.items() if isinstance(exc, k)
+    )
+    details = [{"field": exc.field, "message": exc.message}] if exc.field else []
+    message = default if exc.field else (exc.message or default)
+    return Response({"error": {"code": code, "message": message, "details": details}}, status=http_status)
+
+
 def api_exception_handler(exc, context):
+    if isinstance(exc, errors.DomainError):
+        return _domain_response(exc)
     response = exception_handler(exc, context)
     if response is None:
         logger.exception("Unhandled API error", exc_info=exc)
