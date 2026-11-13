@@ -17,6 +17,7 @@ from django.utils import timezone
 
 from apps.catalogue import selectors as catalogue
 from apps.inventory import services as inventory
+from apps.notifications.services import notify
 from apps.orders import selectors
 from apps.orders.models import DeliveryMethod, Order, OrderLine, OrderStatus, OrderStatusHistory
 from core.actor import Actor
@@ -28,6 +29,10 @@ CENT = Decimal("0.01")
 
 def _record(order: Order, from_status: str, to_status: str, actor_id=None, note: str = "") -> None:
     OrderStatusHistory.objects.create(order=order, from_status=from_status, to_status=to_status, actor_id=actor_id, note=note)
+
+
+def _label(order: Order) -> str:
+    return f"order #{str(order.id)[:8]}"
 
 
 def _fingerprint(items: list[dict], delivery_method: str, delivery_location: str) -> str:
@@ -118,6 +123,8 @@ def create_order(
                     quantity=quantity, quantity_unit=listing.quantity_unit, line_total=line_total, reservation_id=reservation.id,
                 )
             _record(order, "", OrderStatus.PENDING_PAYMENT, actor.id, "Order placed")
+            notify(order.buyer_id, "order_placed", "Order placed", f"Your {_label(order)} was placed. Pay within {settings.RESERVATION_TTL_MINUTES} minutes to confirm it.", order.id)
+            notify(order.farmer_id, "order_received", "New order", f"You have a new {_label(order)} awaiting payment.", order.id)
     except IntegrityError:
         # Concurrent request with the same idempotency key won the race: return its order.
         if idempotency_key:
@@ -148,6 +155,8 @@ def cancel_order(actor: Actor, order_id, reason: str = "") -> Order:
     previous, order.status = order.status, OrderStatus.CANCELLED
     order.save(update_fields=["status", "updated_at"])
     _record(order, previous, order.status, actor.id, (reason or "").strip()[:255])
+    for user_id in {order.buyer_id, order.farmer_id} - {actor.id}:
+        notify(user_id, "order_cancelled", "Order cancelled", f"The {_label(order)} was cancelled.", order.id)
     return selectors.get_order(order.id)
 
 
@@ -167,6 +176,7 @@ def expire_unpaid_orders(now=None) -> int:
             order.status = OrderStatus.EXPIRED
             order.save(update_fields=["status", "updated_at"])
             _record(order, OrderStatus.PENDING_PAYMENT, OrderStatus.EXPIRED, None, "Payment window elapsed")
+            notify(order.buyer_id, "order_expired", "Order expired", f"The {_label(order)} expired because it was not paid in time.", order.id)
             count += 1
     return count
 
@@ -191,4 +201,23 @@ def confirm_payment(order_id, reference: str = "") -> Order:
     order.status = OrderStatus.PAID
     order.save(update_fields=["status", "updated_at"])
     _record(order, OrderStatus.PENDING_PAYMENT, OrderStatus.PAID, None, f"Payment confirmed {reference}".strip())
+    notify(order.buyer_id, "payment_received", "Payment received", f"Payment for {_label(order)} was received.", order.id)
+    notify(order.farmer_id, "order_paid", "Order paid", f"The {_label(order)} is paid. Please prepare it.", order.id)
+    return selectors.get_order(order.id)
+
+
+@transaction.atomic
+def complete_order(order_id, actor_id=None, note: str = "") -> Order:
+    """paid -> completed once the goods were delivered/collected. Called by the Delivery domain. Idempotent."""
+    try:
+        order = Order.objects.select_for_update().get(pk=order_id)
+    except (Order.DoesNotExist, ValueError, ValidationError) as exc:
+        raise NotFoundError("Order not found.") from exc
+    if order.status == OrderStatus.COMPLETED:
+        return selectors.get_order(order.id)
+    if order.status != OrderStatus.PAID:
+        raise ConflictError("Only a paid order can be completed.", code="ORDER_NOT_PAID")
+    order.status = OrderStatus.COMPLETED
+    order.save(update_fields=["status", "updated_at"])
+    _record(order, OrderStatus.PAID, OrderStatus.COMPLETED, actor_id, note)
     return selectors.get_order(order.id)

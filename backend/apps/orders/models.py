@@ -7,6 +7,7 @@ from django.db.models import Q
 class OrderStatus(models.TextChoices):
     PENDING_PAYMENT = "pending_payment", "Pending payment"
     PAID = "paid", "Paid"
+    COMPLETED = "completed", "Completed"  # delivered/collected
     CANCELLED = "cancelled", "Cancelled"
     EXPIRED = "expired", "Expired"
 

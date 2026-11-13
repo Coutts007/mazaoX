@@ -8,6 +8,7 @@ from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
+from apps.notifications.services import notify
 from apps.orders import selectors as orders
 from apps.orders import services as order_services
 from apps.payments import selectors
@@ -83,4 +84,6 @@ def _finish(attempt: PaymentAttempt, status: str, reason: str) -> PaymentAttempt
     attempt.failure_reason = reason
     attempt.completed_at = timezone.now()
     attempt.save(update_fields=["status", "failure_reason", "completed_at"])
+    if status == PaymentStatus.FAILED:
+        notify(attempt.buyer_id, "payment_failed", "Payment failed", "Your payment did not go through. You can try again while the order is still open.", attempt.order_id)
     return attempt
