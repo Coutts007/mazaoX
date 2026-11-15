@@ -89,6 +89,23 @@ describe("auth pages", () => {
     await waitFor(() => expect(screen.getByText("This email is already registered.")).toBeInTheDocument());
   });
 
+  it("register creates the account (API returns only the user) and then signs in", async () => {
+    const calls: string[] = [];
+    fetchMock.mockImplementation(async (url: string) => {
+      calls.push(url.replace("http://localhost:8010/api/v1", ""));
+      if (url.endsWith("/auth/register")) return json(201, { data: { ...user, role: "farmer" } });
+      if (url.endsWith("/auth/login")) return json(200, { data: { access: "tok", user: { ...user, role: "farmer" } } });
+      return json(401, { error: { code: "U", message: "x" } });
+    });
+    mount(<Register />, "/register");
+    await userEvent.type(await screen.findByLabelText("Full name"), "New Farmer");
+    await userEvent.type(screen.getByLabelText("Email"), "new@example.test");
+    await userEvent.type(screen.getByLabelText("Password"), "Str0ng-Pass-123");
+    await userEvent.click(screen.getByRole("button", { name: "Create account" }));
+    await waitFor(() => expect(calls).toEqual(expect.arrayContaining(["/auth/register", "/auth/login"])));
+    expect(calls.indexOf("/auth/register")).toBeLessThan(calls.indexOf("/auth/login"));
+  });
+
   it("register requires an email or phone and a long enough password", async () => {
     mount(<Register />, "/register");
     await userEvent.type(await screen.findByLabelText("Full name"), "X Y");

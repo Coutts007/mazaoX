@@ -203,3 +203,23 @@ export interface Profile {
   bio: string;
   updated_at: string;
 }
+
+export interface StockSummary {
+  listing_id: string;
+  unit: string;
+  on_hand: string;
+  reserved: string;
+  available: string;
+}
+
+export interface StockMovement {
+  id: string;
+  movement_type: "addition" | "correction" | "spoilage" | "sale";
+  quantity_delta: string;
+  resulting_on_hand: string;
+  reason: string;
+  order_id: string | null;
+  created_at: string;
+}
+
+export interface MarketDemand extends DemandRequest {}

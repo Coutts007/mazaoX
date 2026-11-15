@@ -39,7 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const register = useCallback(async (input: RegisterInput) => {
-    const res = await api.post<Session>("/auth/register", input, { auth: false });
+    // The API creates the account and returns only the user; signing in is a separate, explicit step.
+    await api.post<User>("/auth/register", input, { auth: false });
+    const res = await api.post<Session>("/auth/login", { identifier: input.email || input.phone, password: input.password }, { auth: false });
     setSession(res.data);
     return res.data.user;
   }, []);
