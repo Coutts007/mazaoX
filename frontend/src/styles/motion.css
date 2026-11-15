@@ -53,8 +53,12 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{box-shadow:0 0 0
 @media(max-width:899px){.hero{padding:28px 0 36px}}
 
 /* category tiles + steps with your images */
-.cat{min-width:96px}
-.cat-img{width:96px;height:96px;border-radius:10px;background:var(--cream-100);overflow:hidden;display:block;box-shadow:var(--shadow-1)}
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;overflow:visible}
+.cat{min-width:0;padding:0;background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.75);border-radius:var(--radius);overflow:hidden;align-content:start;justify-items:stretch;gap:0;box-shadow:0 4px 18px rgba(11,61,14,.10)}
+.cat>span:last-child{padding:12px;font-size:14px;line-height:1.3}
+.cat:hover{background:rgba(255,255,255,.8)}
+.cat-img{width:100%;aspect-ratio:4/3;background:var(--cream-100);overflow:hidden;display:block}
+.cat-img:empty{display:none}
 .cat-img img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
 .cat:hover .cat-img img{transform:scale(1.06)}
 .step-img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;margin-bottom:12px}

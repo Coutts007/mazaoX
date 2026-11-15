@@ -8,9 +8,10 @@ class Category(models.Model):
     name = models.CharField(max_length=80, unique=True)
     slug = models.SlugField(max_length=80, unique=True)
     is_active = models.BooleanField(default=True)
+    sort_order = models.PositiveSmallIntegerField(default=100)  # keeps the agreed category order in menus
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["sort_order", "name"]
         verbose_name_plural = "categories"
 
     def __str__(self):
@@ -22,7 +23,11 @@ class QuantityUnit(models.TextChoices):
     BAG = "bag", "Bag"
     TONNE = "tonne", "Tonne"
     CRATE = "crate", "Crate"
-    PIECE = "piece", "Piece"
+    PIECE = "piece", "Piece"  # also used per head of livestock
+    LITRE = "litre", "Litre"
+    TRAY = "tray", "Tray"
+    BUNCH = "bunch", "Bunch"
+    BALE = "bale", "Bale"
 
 
 class ListingStatus(models.TextChoices):

@@ -10,7 +10,11 @@ export const UNITS: { value: string; label: string }[] = [
   { value: "bag", label: "bag" },
   { value: "tonne", label: "tonne" },
   { value: "crate", label: "crate" },
-  { value: "piece", label: "piece" },
+  { value: "piece", label: "piece / head" },
+  { value: "litre", label: "litre" },
+  { value: "tray", label: "tray" },
+  { value: "bunch", label: "bunch" },
+  { value: "bale", label: "bale" },
 ];
 
 export const ORDER_STATUS_LABEL: Record<string, string> = {

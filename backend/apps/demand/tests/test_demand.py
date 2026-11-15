@@ -45,7 +45,7 @@ def test_authorization(market):
 
 @pytest.mark.parametrize(
     "override,field",
-    [({"quantity": "0"}, "quantity"), ({"quantity_unit": "litre"}, "quantity_unit"), ({"county": "Atlantis"}, "county"),
+    [({"quantity": "0"}, "quantity"), ({"quantity_unit": "barrel"}, "quantity_unit"), ({"county": "Atlantis"}, "county"),
      ({"target_price_per_unit": "0"}, "target_price_per_unit"), ({"produce_name": "  "}, "produce_name"),
      ({"required_by": str(date.today() - timedelta(days=1))}, "required_by"), ({"required_by": "soon"}, "required_by")],
 )

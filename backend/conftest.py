@@ -66,7 +66,7 @@ def make_listing(db):
     from core.actor import Actor
 
     def _make(farmer, **kw):
-        data = dict(category_id=Category.objects.get(slug="tomatoes").id, produce_name="Tomatoes",
+        data = dict(category_id=Category.objects.get(slug="vegetables").id, produce_name="Tomatoes",
                     price_per_unit="85.00", quantity_unit="kg", county="Kiambu", harvest_date=date.today())
         data.update(kw)
         from decimal import Decimal

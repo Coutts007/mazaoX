@@ -2,7 +2,11 @@ import { SITE_IMAGES } from "../config/images";
 import { SiteImage, useImageAvailable } from "./SiteImage";
 
 /** Category tint used behind the fallback so cards without any image still look intentional. */
-const TINT: Record<string, string> = { tomatoes: "#f3ddd5", kale: "#dfe9d3", maize: "#f1e8c4", potatoes: "#eadfce", onions: "#eadbe3" };
+const TINT: Record<string, string> = {
+  "cereals-grains": "#f1e8c4", "pulses-legumes": "#eadfce", "roots-tubers": "#eadfce", vegetables: "#dfe9d3", fruits: "#f6e3c8",
+  "nuts-oilseeds": "#ecdfc8", "cash-crops": "#dde7d3", "herbs-spices": "#e0ead0", "fodder-forage": "#e3e9c9", "flowers-nursery": "#f3dde4",
+  livestock: "#eadccf", apiculture: "#f5e6b8", fisheries: "#d8e6ee", "processed-products": "#eadfce", forestry: "#d9e2cf",
+};
 
 /**
  * Stand-in shown when a listing has no uploaded photo: your category image, then your generic placeholder,

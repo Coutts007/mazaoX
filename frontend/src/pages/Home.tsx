@@ -29,7 +29,7 @@ export default function Home() {
 
       <div className="section-title"><h2>Shop by category</h2><Link to="/browse">All produce →</Link></div>
       <div className="cats" role="list">
-        {cats.loading && Array.from({ length: 5 }).map((_, i) => <div key={i} className="skeleton" style={{ width: 68, height: 90, flex: "none" }} />)}
+        {cats.loading && Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton" style={{ height: 70 }} />)}
         {cats.data?.map((c) => (
           <Link role="listitem" key={c.id} className="cat" to={`/browse?category_id=${c.id}`}>
             <span className="cat-img"><SiteImage src={SITE_IMAGES.categories[c.slug]} /></span><span>{c.name}</span>

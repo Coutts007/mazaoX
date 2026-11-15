@@ -10,7 +10,7 @@ LISTINGS = "/api/v1/listings"
 
 @pytest.fixture
 def tomatoes():
-    return Category.objects.get(slug="tomatoes")
+    return Category.objects.get(slug="vegetables")
 
 
 def body(category, **kw):
@@ -36,7 +36,15 @@ def test_categories_seeded_and_public(auth_client):
     r = auth_client().get("/api/v1/categories")
     assert r.status_code == 200
     slugs = {c["slug"] for c in r.json()["data"]}
-    assert slugs == {"tomatoes", "potatoes", "onions", "kale", "maize"}
+    assert len(slugs) == 15
+    assert {"cereals-grains", "vegetables", "livestock", "apiculture", "fisheries", "forestry"} <= slugs
+    assert [c["slug"] for c in r.json()["data"]][:3] == ["cereals-grains", "pulses-legumes", "roots-tubers"]  # agreed order
+
+
+def test_new_units_accepted(make_user, auth_client, create):
+    farmer = make_user("farmer")
+    for unit in ("litre", "tray", "bunch", "bale"):
+        assert create(farmer, quantity_unit=unit)["quantity_unit"] == unit
 
 
 def test_farmer_creates_listing_with_declared_quality_labels(make_user, create):
@@ -65,7 +73,7 @@ def test_farmer_id_in_body_is_ignored(make_user, auth_client, tomatoes):
         ({"price_per_unit": "0"}, "price_per_unit"),
         ({"price_per_unit": "-5"}, "price_per_unit"),
         ({"price_per_unit": "abc"}, "price_per_unit"),
-        ({"quantity_unit": "litre"}, "quantity_unit"),
+        ({"quantity_unit": "barrel"}, "quantity_unit"),
         ({"county": "Atlantis"}, "county"),
         ({"produce_name": ""}, "produce_name"),
         ({"harvest_date": str(date.today() + timedelta(days=3))}, "harvest_date"),
@@ -129,7 +137,7 @@ def test_search_filters_and_pagination(make_user, auth_client, create, tomatoes)
     farmer = make_user("farmer")
     create(farmer, produce_name="Roma Tomatoes", price_per_unit="50.00", county="Kiambu")
     create(farmer, produce_name="Cherry Tomatoes", price_per_unit="150.00", county="Nakuru", quantity_unit="crate")
-    potatoes = Category.objects.get(slug="potatoes")
+    potatoes = Category.objects.get(slug="roots-tubers")
     r = auth_client(farmer).post(LISTINGS, body(potatoes, produce_name="Shangi", price_per_unit="40.00",
                                                 declared_grade=""), format="json")
     assert r.status_code == 201
@@ -158,7 +166,7 @@ def test_search_hides_inactive_and_validates_filters(make_user, auth_client, cre
     auth_client(farmer).post(f"{LISTINGS}/{lid}/deactivate")
     assert auth_client().get(LISTINGS).json()["data"] == []
     assert auth_client().get(LISTINGS, {"min_price": "10", "max_price": "5"}).status_code == 400
-    assert auth_client().get(LISTINGS, {"quantity_unit": "litre"}).status_code == 400
+    assert auth_client().get(LISTINGS, {"quantity_unit": "barrel"}).status_code == 400
     assert auth_client().get(LISTINGS, {"page_size": 1000}).json()["pagination"]["page_size"] == 100
 
 

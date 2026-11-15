@@ -26,11 +26,11 @@ FARMERS = [
 ]
 BUYERS = [("Achieng Demo", "achieng.buyer@example.test"), ("Otieno Demo", "otieno.buyer@example.test")]
 PRODUCE = [  # category slug, name, unit, price, stock
-    ("tomatoes", "Roma Tomatoes", "kg", "85.00", "500"),
-    ("potatoes", "Shangi Potatoes", "kg", "45.00", "1200"),
-    ("onions", "Red Onions", "bag", "2500.00", "40"),
-    ("kale", "Sukuma Wiki (Kale)", "kg", "30.00", "300"),
-    ("maize", "Dry Maize", "bag", "3200.00", "60"),
+    ("vegetables", "Roma Tomatoes", "kg", "85.00", "500"),
+    ("roots-tubers", "Shangi Potatoes", "kg", "45.00", "1200"),
+    ("vegetables", "Red Onions", "bag", "2500.00", "40"),
+    ("vegetables", "Sukuma Wiki (Kale)", "kg", "30.00", "300"),
+    ("cereals-grains", "Dry Maize", "bag", "3200.00", "60"),
 ]
 
 
