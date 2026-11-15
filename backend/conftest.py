@@ -68,3 +68,51 @@ def make_listing(db):
         return services.create_listing(Actor.from_user(farmer), data)
 
     return _make
+
+
+@pytest.fixture
+def market(make_user, make_listing, auth_client, settings):
+    """A ready marketplace: farmer, buyer, admin, one stocked listing, plus helpers to move orders along."""
+    from decimal import Decimal
+    from types import SimpleNamespace
+
+    from apps.delivery import services as delivery
+    from apps.inventory import services as inventory
+    from apps.orders import services as orders
+    from apps.payments import services as payments
+    from core.actor import Actor
+
+    settings.PAYMENT_SIMULATION_ENABLED = True
+    farmer, buyer, admin = make_user("farmer"), make_user("buyer"), make_user("admin")
+    listing = make_listing(farmer, price_per_unit="85.00")
+    inventory.adjust_stock(Actor.from_user(farmer), listing.id, "addition", Decimal("1000"))
+
+    def place(qty="10", user=None):
+        order, _ = orders.create_order(
+            Actor.from_user(user or buyer),
+            items=[{"listing_id": listing.id, "quantity": Decimal(qty), "quantity_unit": "kg"}],
+            delivery_method="collection",
+        )
+        return order
+
+    def pay(order):
+        actor = Actor.from_user(order_buyer(order))
+        attempt, _ = payments.start_simulated_payment(actor, order.id)
+        payments.complete_simulated_payment(actor, attempt.id, "success")
+        return order
+
+    def order_buyer(order):
+        from apps.identity.models import User  # test-support only; identity is the allowed FK domain
+
+        return User.objects.get(pk=order.buyer_id)
+
+    def complete(order):
+        pay(order)
+        admin_actor = Actor.from_user(admin)
+        d = delivery.create_delivery(admin_actor, order.id)
+        delivery.update_status(admin_actor, d.id, "dispatched")
+        delivery.update_status(admin_actor, d.id, "delivered")
+        return order
+
+    return SimpleNamespace(farmer=farmer, buyer=buyer, admin=admin, listing=listing, place=place, pay=pay,
+                           complete=complete, client=auth_client, make_user=make_user)

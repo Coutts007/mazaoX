@@ -30,3 +30,9 @@ def email_exists(email: str) -> bool:
 
 def phone_exists(phone: str) -> bool:
     return User.objects.filter(phone=phone).exists()
+
+
+def get_display_names(user_ids) -> dict[str, str]:
+    """Public-safe display names (first name only) for a batch of users, keyed by str(id)."""
+    rows = User.objects.filter(pk__in=list(user_ids)).values_list("id", "full_name")
+    return {str(pk): (name.split() or ["User"])[0] for pk, name in rows}
