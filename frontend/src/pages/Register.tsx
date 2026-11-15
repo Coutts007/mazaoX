@@ -3,11 +3,14 @@ import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { ApiError, errorMessage } from "../api/client";
 import { homeFor, useAuth } from "../auth/AuthContext";
 import { PasswordField, TextField } from "../components/Field";
+import { SITE_IMAGES } from "../config/images";
+import { useBackground } from "../components/SiteImage";
 import { useToast } from "../components/Toasts";
 
 type Choice = "buyer" | "farmer";
 
 export default function Register() {
+  const bg = useBackground(SITE_IMAGES.authBackground);
   const { user, register } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
@@ -50,7 +53,7 @@ export default function Register() {
   }
 
   return (
-    <div className="auth-bg">
+    <div className="auth-bg" style={bg}>
       <form className="glass stack" onSubmit={submit} noValidate>
         <div>
           <h1>Join MazaoX</h1>
