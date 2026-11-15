@@ -223,3 +223,46 @@ export interface StockMovement {
 }
 
 export interface MarketDemand extends DemandRequest {}
+
+export interface AdminUser {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  role: "farmer" | "buyer" | "admin";
+  is_active: boolean;
+  date_joined: string;
+}
+
+export interface AdminReview {
+  id: string;
+  order_id: string;
+  farmer_id: string;
+  rating: number;
+  comment: string;
+  is_hidden: boolean;
+  moderation_reason: string;
+  created_at: string;
+}
+
+export interface AuditLog {
+  id: string;
+  actor_id: string | null;
+  action: string;
+  target_type: string;
+  target_id: string;
+  detail: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface AdminSummary {
+  users: { total: number; by_role: Record<string, number>; suspended: number };
+  listings: { total: number; active_visible: number; inactive: number; hidden_by_admin: number };
+  orders: { total: number; by_status: Record<string, number>; paid_value_ksh: string };
+  payments: { by_status: Record<string, number> };
+  deliveries: { by_status: Record<string, number> };
+  issues: { total: number; by_status: Record<string, number> };
+  reviews: { total: number; hidden: number };
+  inspections: { total: number; published: number };
+  demand_requests: { by_status: Record<string, number> };
+}

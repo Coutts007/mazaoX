@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, api, errorMessage } from "../api/client";
+import { DeliveryPanel } from "./admin/DeliveryPanel";
 import type { Delivery, Issue, Order, OrderHistoryItem, PaymentAttempt, PublicFarmer } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 import { Countdown, StarPicker } from "../components/Bits";
@@ -199,6 +200,7 @@ export default function OrderDetail() {
           )}
         </div>
         <div className="stack">
+          {user?.role === "admin" && <DeliveryPanel order={o} delivery={delivery.data} onChanged={refresh} />}
           <section className="card card-pad stack" aria-label="Delivery">
             <h3>{o.delivery_method === "delivery" ? "🚚 Delivery" : "🚜 Collection"}</h3>
             {o.delivery_location && <p>{o.delivery_location}</p>}

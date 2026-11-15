@@ -10,11 +10,14 @@ interface Props {
 /** Accessible dialog: Esc and backdrop click close it, focus moves in and returns to the opener. */
 export function Modal({ title, onClose, children, footer }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  // Keep the latest onClose without re-running the effect: re-running would pull focus back to the dialog on every parent render (i.e. every keystroke).
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
     ref.current?.focus();
     const esc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") closeRef.current();
       if (e.key === "Tab" && ref.current) {
         const f = ref.current.querySelectorAll<HTMLElement>("button,[href],input,select,textarea,[tabindex]:not([tabindex='-1'])");
         if (!f.length) return;
@@ -31,7 +34,7 @@ export function Modal({ title, onClose, children, footer }: Props) {
       document.body.style.overflow = "";
       opener?.focus?.();
     };
-  }, [onClose]);
+  }, []);
   return (
     <div className="modal-back" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal" role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} ref={ref}>

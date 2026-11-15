@@ -13,7 +13,7 @@ img{max-width:100%;display:block}
 .wrap{max-width:1180px;margin:0 auto;padding:0 16px}
 main{min-height:60vh;padding-bottom:calc(var(--tabbar-h) + 24px)}
 @media(min-width:760px){main{padding-bottom:40px}}
-.page{padding:20px 0 8px}
+.page{padding-top:20px;padding-bottom:8px}
 .page-head{display:flex;gap:12px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
 .page-head h1{font-size:clamp(22px,4vw,30px)}
 .muted{color:var(--ink-600)}
@@ -296,3 +296,6 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-
 .photo-item button{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;cursor:pointer}
 .photo-add{aspect-ratio:1;border:2px dashed var(--leaf-500);border-radius:12px;background:var(--sage-100);color:var(--forest-700);font:600 13px var(--font-head);cursor:pointer;display:grid;place-items:center;align-content:center;gap:2px}
 .photo-add b{font-size:26px;line-height:1}
+
+/* admin */
+.grid-2{display:grid;gap:14px}@media(min-width:760px){.grid-2{grid-template-columns:1fr 1fr}}

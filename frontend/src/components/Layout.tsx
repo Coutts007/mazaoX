@@ -25,7 +25,10 @@ function navFor(role: Role | null): NavItem[] {
       { to: "/admin", label: "Overview", icon: "📊", end: true },
       { to: "/admin/users", label: "Users", icon: "👥" },
       { to: "/admin/listings", label: "Listings", icon: "🧺" },
+      { to: "/admin/orders", label: "Orders", icon: "🧾" },
       { to: "/admin/issues", label: "Issues", icon: "🛟" },
+      { to: "/admin/reviews", label: "Reviews", icon: "⭐" },
+      { to: "/admin/audit", label: "Audit", icon: "📜" },
     ];
   if (role === "buyer")
     return [
