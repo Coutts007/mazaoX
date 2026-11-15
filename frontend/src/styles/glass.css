@@ -1,0 +1,68 @@
+/* ---------- glassmorphism ----------
+   Frosted, see-through panels. Over photos (hero, login/register) the panels are
+   dark-tinted glass with light text; elsewhere they are light glass. */
+:root{
+  --glass-light:rgba(255,255,255,.14);
+  --glass-border:rgba(255,255,255,.34);
+  --glass-shadow:0 8px 32px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.35);
+  --glass-blur:blur(16px) saturate(150%);
+}
+
+/* lighten the photo scrim so the background reads through the glass */
+.hero::before{background:rgba(10,28,12,.22)}
+.auth-bg::before{background:rgba(11,30,12,.2)}
+
+/* panels on photos */
+.hero-card,.hero-latest,.glass{
+  background:var(--glass-light);
+  -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+  border:1px solid var(--glass-border);box-shadow:var(--glass-shadow);color:#fff;
+}
+.hero-card h1,.hero-card .lead,.hero-card .kicker,.hero-card .hero-links,
+.hero-latest h2,.glass h1,.glass .lead,.glass p,.glass label,.glass .hint{color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.35)}
+.hero-card .kicker{opacity:.9}
+.hero-card .hero-links a,.hero-latest .all,.glass a{color:#fff;text-decoration:underline;text-underline-offset:3px}
+.hero-search{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.45)}
+.hero-search input{color:#fff}
+.hero-search input::placeholder,.glass .input::placeholder{color:rgba(255,255,255,.75)}
+.hero-search svg{color:#fff}
+.hero-search:focus-within{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.25)}
+.hero-latest .mini{color:#fff}.hero-latest .mini small{color:rgba(255,255,255,.82)}
+.hero-latest .mini:hover{background:rgba(255,255,255,.14)}
+.hero-latest .mini-photo{border:1px solid rgba(255,255,255,.4)}
+
+/* form fields on glass */
+.glass .input,.glass .select,.glass .textarea{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.45);color:#fff}
+.glass .input:focus,.glass .select:focus{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.25);outline:0}
+.glass .pw button{color:#fff}
+.glass .err{color:#ffd9d4;font-weight:600}
+.glass .alert-error{background:rgba(120,20,10,.45);border-color:rgba(255,200,190,.6);color:#fff}
+.glass .btn-primary{border:1px solid rgba(255,255,255,.5)}
+
+/* call-to-action band keeps the same treatment */
+.cta-band{position:relative;overflow:hidden}
+.cta-band>*{position:relative}
+
+/* the rest of the system: translucent surfaces that blur what scrolls beneath */
+.header{background:rgba(255,255,255,.62);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border-bottom:1px solid rgba(255,255,255,.55)}
+.tabbar{background:rgba(255,255,255,.66);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border-top:1px solid rgba(255,255,255,.55)}
+.menu{background:rgba(255,255,255,.72);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border:1px solid rgba(255,255,255,.6)}
+.card,.lcard,.kpi,.trust div,.buybox,.summary{
+  background:rgba(255,255,255,.6);-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%);
+  border:1px solid rgba(255,255,255,.7);
+}
+.modal,.dialog{background:rgba(255,255,255,.78);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border:1px solid rgba(255,255,255,.7)}
+.toast{-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+
+/* soft colour behind the app so the glass has something to refract */
+body{background:
+  radial-gradient(60vmax 40vmax at 10% -5%,rgba(68,162,6,.16),transparent 60%),
+  radial-gradient(50vmax 40vmax at 100% 30%,rgba(214,168,60,.14),transparent 60%),
+  var(--cream-100,#faf6ea);background-attachment:fixed}
+
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .hero-card,.hero-latest,.glass{background:rgba(20,40,22,.72)}
+  .header,.tabbar,.menu,.card{background:#fff}
+}
+.hero-card .btn-ghost{color:#fff;border:1.5px solid rgba(255,255,255,.7);background:rgba(255,255,255,.1);text-shadow:0 1px 6px rgba(0,0,0,.3)}
+.hero-card .btn-ghost:hover{background:rgba(255,255,255,.22)}

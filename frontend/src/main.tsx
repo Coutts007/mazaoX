@@ -8,6 +8,7 @@ import { ToastProvider } from "./components/Toasts";
 import "./styles/tokens.css";
 import "./styles/app.css";
 import "./styles/motion.css";
+import "./styles/glass.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
