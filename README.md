@@ -2,7 +2,7 @@
 
 Kenyan agricultural produce marketplace (academic prototype). Farmers publish listings and manage stock,
 buyers search, order and pay (**simulated payments only**), administrators moderate. This repository is the
-**backend** (Django + Django REST Framework + PostgreSQL + Redis); the React frontend comes next.
+**backend** (Django + Django REST Framework + PostgreSQL + Redis) and the **frontend** (React + TypeScript + Vite).
 
 ## Architecture
 Service-oriented modular monolith: one Django project, one PostgreSQL database, one app per domain under
@@ -36,6 +36,13 @@ Mobile-first SPA served by nginx on http://localhost:5180 (`docker compose up --
 Design: see `docs/design/DESIGN_SYSTEM.md`. Dependencies are deliberately few: React, `react-router-dom`, Vite, TypeScript,
 Vitest + React Testing Library. The browser calls the API directly (CORS, `credentials: include`); use `localhost`, not `127.0.0.1`,
 so the httpOnly refresh cookie is sent. The access token is kept in memory only; reloading restores the session from the cookie.
+Screens by role (all authorization is enforced by the API; the UI only hides what a role cannot use):
+- **Visitors / buyers:** browse and filter produce (filters live in the URL), listing detail with farmer-declared vs independently inspected quality,
+  cart (one farmer per order), checkout with an idempotency key, simulated M-Pesa payment with countdown, orders, notifications, demand requests, reviews, issues.
+- **Farmers:** dashboard, listing editor (photos with client-side type/size checks, stock additions/corrections/spoilage), incoming orders, demand market, own reviews.
+- **Administrators:** overview, users (suspend/reinstate with reason), listing moderation, quality inspections, issue triage, review moderation, audit log,
+  all orders and delivery operations (admin acts as the delivery operator).
+Demo logins after `seed_demo` (password `Demo-Pass-12345`): `admin.demo@`, `wanjiru.farmer@`, `achieng.buyer@`, `otieno.buyer@` at `example.test`.
 ```bash
 cd frontend && cp .env.example .env && npm ci
 npm run dev        # http://localhost:5180 (API at VITE_API_URL)
