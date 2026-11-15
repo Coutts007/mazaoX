@@ -1,3 +1,5 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 import re
 
 from rest_framework import status
@@ -33,6 +35,7 @@ class OrderCollectionView(APIView):
         )
         return paginator.get_paginated_response(OrderSerializer(page, many=True).data)
 
+    @extend_schema(request=OrderInputSerializer, responses=OpenApiTypes.OBJECT)
     def post(self, request):
         key = request.headers.get("Idempotency-Key") or None
         if key is not None and not _KEY.match(key):
@@ -66,6 +69,7 @@ class OrderDetailView(APIView):
 class OrderCancelView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=CancelSerializer, responses=OpenApiTypes.OBJECT)
     def post(self, request, order_id):
         serializer = CancelSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

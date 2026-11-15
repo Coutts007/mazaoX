@@ -1,9 +1,11 @@
 from django.conf import settings
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed, PermissionDenied, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle
+from core.throttling import SafeScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -36,7 +38,7 @@ def _session_response(user, refresh: RefreshToken, http_status=status.HTTP_200_O
 
 
 class _AuthThrottled(APIView):
-    throttle_classes = [ScopedRateThrottle]
+    throttle_classes = [SafeScopedRateThrottle]
     throttle_scope = "auth"
 
 
@@ -44,6 +46,7 @@ class RegisterView(_AuthThrottled):
     permission_classes = [AllowAny]
     authentication_classes: list = []
 
+    @extend_schema(request=RegisterSerializer, responses=OpenApiTypes.OBJECT)
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -58,6 +61,7 @@ class LoginView(_AuthThrottled):
     permission_classes = [AllowAny]
     authentication_classes: list = []
 
+    @extend_schema(request=LoginSerializer, responses=OpenApiTypes.OBJECT)
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

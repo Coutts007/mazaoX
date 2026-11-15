@@ -10,6 +10,12 @@ def _clear_throttle_cache():
 
 
 @pytest.fixture(autouse=True)
+def _public_cache_off(settings):
+    # Cache behaviour is tested explicitly in core/tests/test_cache.py; elsewhere it would hide state changes.
+    settings.PUBLIC_CACHE_ENABLED = False
+
+
+@pytest.fixture(autouse=True)
 def _fast_password_hasher(settings):
     # Tests only: skip slow PBKDF2 so the suite stays fast. Production keeps Django's default.
     settings.PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]

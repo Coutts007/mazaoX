@@ -1,3 +1,5 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -50,6 +52,7 @@ class UsersView(_AdminView):
 
 
 class UserStatusView(_AdminView):
+    @extend_schema(request=s.UserStatusSerializer, responses=OpenApiTypes.OBJECT)
     def patch(self, request, user_id):
         ser = s.UserStatusSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
@@ -67,6 +70,7 @@ class ListingsView(_AdminView):
 
 
 class ListingModerationView(_AdminView):
+    @extend_schema(request=s.ModerationSerializer, responses=OpenApiTypes.OBJECT)
     def patch(self, request, listing_id):
         ser = s.ModerationSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
@@ -83,6 +87,7 @@ class IssuesView(_AdminView):
 
 
 class IssueDetailView(_AdminView):
+    @extend_schema(request=s.IssueUpdateSerializer, responses=OpenApiTypes.OBJECT)
     def patch(self, request, issue_id):
         ser = s.IssueUpdateSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
@@ -96,6 +101,7 @@ class ReviewsView(_AdminView):
 
 
 class ReviewModerationView(_AdminView):
+    @extend_schema(request=s.ModerationSerializer, responses=OpenApiTypes.OBJECT)
     def patch(self, request, review_id):
         ser = s.ModerationSerializer(data=request.data)
         ser.is_valid(raise_exception=True)

@@ -10,3 +10,13 @@ def payment_simulation_in_production(app_configs, **kwargs):
             id="mazaox.W001",
         )]
     return []
+
+
+@register()
+def insecure_secret_key(app_configs, **kwargs):
+    from django.core.checks import Error
+
+    key = settings.SECRET_KEY
+    if not settings.DEBUG and (len(key) < 32 or key.startswith("django-insecure") or "change-me" in key):
+        return [Error("DJANGO_SECRET_KEY is weak or a placeholder while DEBUG is off.", id="mazaox.E001")]
+    return []

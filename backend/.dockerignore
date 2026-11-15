@@ -8,3 +8,7 @@ staticfiles/
 requirements-dev.txt
 Dockerfile
 .dockerignore
+tests/
+conftest.py
+pytest.ini
+**/tests/

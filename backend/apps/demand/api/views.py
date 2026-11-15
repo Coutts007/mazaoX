@@ -1,3 +1,5 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -26,6 +28,7 @@ class DemandCollectionView(APIView):
         page = paginator.paginate_queryset(selectors.list_for_actor(Actor.from_user(request.user), state), request, view=self)
         return paginator.get_paginated_response(DemandSerializer(page, many=True).data)
 
+    @extend_schema(request=DemandInputSerializer, responses=OpenApiTypes.OBJECT)
     def post(self, request):
         serializer = DemandInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

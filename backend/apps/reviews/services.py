@@ -5,6 +5,7 @@ from apps.orders import selectors as orders
 from apps.reviews import selectors
 from apps.reviews.models import Review
 from core.actor import Actor
+from core.cache import invalidate
 from core.errors import ConflictError, ForbiddenError, InvalidInputError, NotFoundError
 
 
@@ -26,6 +27,7 @@ def create_review(actor: Actor, order_id, rating: int, comment: str = "") -> Rev
             )
     except IntegrityError as exc:
         raise ConflictError("This order has already been reviewed.", code="REVIEW_EXISTS") from exc
+    invalidate("reviews")
     notify(order.farmer_id, "review_received", "New review", f"A buyer left you a {rating}-star review.", order.id)
     return review
 
@@ -41,4 +43,5 @@ def set_hidden(actor: Actor, review_id, hidden: bool, reason: str = "") -> Revie
     review.is_hidden = hidden
     review.moderation_reason = (reason or "").strip()[:255] if hidden else ""
     review.save(update_fields=["is_hidden", "moderation_reason"])
+    invalidate("reviews")
     return review

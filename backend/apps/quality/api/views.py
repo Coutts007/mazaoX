@@ -1,3 +1,5 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -23,6 +25,7 @@ class ListingInspectionsView(APIView):
         page = paginator.paginate_queryset(selectors.list_published_for_listing(listing_id), request, view=self)
         return paginator.get_paginated_response(InspectionSerializer(page, many=True).data)
 
+    @extend_schema(request=InspectionInputSerializer, responses=OpenApiTypes.OBJECT)
     def post(self, request, listing_id):
         serializer = InspectionInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -33,6 +36,7 @@ class ListingInspectionsView(APIView):
 class InspectionDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=CorrectionSerializer, responses=OpenApiTypes.OBJECT)
     def patch(self, request, inspection_id):
         serializer = CorrectionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

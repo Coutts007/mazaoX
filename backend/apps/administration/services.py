@@ -20,6 +20,7 @@ from apps.quality import selectors as quality_selectors
 from apps.reviews import selectors as review_selectors
 from apps.reviews import services as reviews
 from core.actor import Actor
+from core.cache import invalidate
 from core.errors import ForbiddenError, InvalidInputError, NotFoundError
 
 
@@ -43,6 +44,8 @@ def set_user_status(actor: Actor, user_id, active: bool, reason: str = ""):
     hidden = 0
     if user.role == "farmer":  # a suspended farmer's listings leave the marketplace; reinstating restores them
         hidden = catalogue.set_owner_suspended(user.id, not active)
+    invalidate("profiles")
+    invalidate("reviews")
     record(actor.id, "user.reinstated" if active else "user.suspended", "user", user.id, {"reason": reason[:255], "listings_affected": hidden})
     return user
 

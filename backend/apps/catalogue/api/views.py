@@ -1,5 +1,7 @@
 from django.core.files.storage import default_storage
 from django.http import FileResponse
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -14,6 +16,7 @@ from apps.catalogue.api.serializers import (
 from apps.identity.permissions import IsFarmer
 from apps.inventory import selectors as inventory
 from core.actor import Actor
+from core.cache import public_cache
 from core.errors import NotFoundError
 from core.pagination import StandardPagination
 
@@ -25,6 +28,7 @@ def _actor(request) -> Actor | None:
 class CategoryListView(APIView):
     permission_classes = [AllowAny]
 
+    @public_cache("catalogue", 300)
     def get(self, request):
         return Response({"data": CategorySerializer(selectors.list_categories(), many=True).data})
 
@@ -33,6 +37,8 @@ class ListingCollectionView(APIView):
     def get_permissions(self):
         return [IsFarmer()] if self.request.method == "POST" else [AllowAny()]
 
+    @extend_schema(parameters=[ListingFilterSerializer], responses=OpenApiTypes.OBJECT)
+    @public_cache("catalogue", 15)
     def get(self, request):
         filters = ListingFilterSerializer(data=request.query_params)
         filters.is_valid(raise_exception=True)
@@ -47,6 +53,7 @@ class ListingCollectionView(APIView):
         context = {"availability": inventory.get_availability_bulk([l.id for l in page])}
         return paginator.get_paginated_response(ListingSerializer(page, many=True, context=context).data)
 
+    @extend_schema(request=ListingInputSerializer, responses=OpenApiTypes.OBJECT)
     def post(self, request):
         serializer = ListingInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -58,6 +65,7 @@ class ListingDetailView(APIView):
     def get_permissions(self):
         return [IsAuthenticated()] if self.request.method == "PATCH" else [AllowAny()]
 
+    @public_cache("catalogue", 15)
     def get(self, request, listing_id):
         listing = selectors.get_visible_listing(listing_id, _actor(request))
         if listing is None:
@@ -65,6 +73,7 @@ class ListingDetailView(APIView):
         context = {"availability": inventory.get_availability_bulk([listing.id])}
         return Response({"data": ListingSerializer(listing, context=context).data})
 
+    @extend_schema(request=ListingInputSerializer, responses=OpenApiTypes.OBJECT)
     def patch(self, request, listing_id):
         serializer = ListingInputSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -92,6 +101,10 @@ class ListingMediaCollectionView(APIView):
     permission_classes = [IsFarmer]
     parser_classes = [MultiPartParser, FormParser]
 
+    @extend_schema(
+        request={"multipart/form-data": {"type": "object", "properties": {"image": {"type": "string", "format": "binary"}}, "required": ["image"]}},
+        responses=OpenApiTypes.OBJECT,
+    )
     def post(self, request, listing_id):
         upload = request.FILES.get("image")
         if upload is None:

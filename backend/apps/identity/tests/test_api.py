@@ -157,7 +157,7 @@ def test_logout_requires_authentication():
     "DEFAULT_THROTTLE_RATES": {"auth": "3/min"},
 })
 def test_login_is_rate_limited():
-    from rest_framework.throttling import ScopedRateThrottle
+    from core.throttling import SafeScopedRateThrottle as ScopedRateThrottle
     ScopedRateThrottle.THROTTLE_RATES = {"auth": "3/min"}
     try:
         c = APIClient()

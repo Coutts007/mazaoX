@@ -13,6 +13,8 @@ RUN pip install --default-timeout=120 --retries 10 -r requirements.txt
 RUN useradd --create-home --uid 1000 mazaox && mkdir -p /app/media && chown -R mazaox /app
 COPY --chown=mazaox . .
 RUN chmod +x docker-entrypoint.sh
+# Collect admin CSS/JS for WhiteNoise. Dummy values only satisfy settings; nothing connects to a database here.
+RUN DJANGO_SECRET_KEY=build-only DB_NAME=x DB_USER=x DB_PASSWORD=x python manage.py collectstatic --noinput
 
 USER mazaox
 ENV MEDIA_ROOT=/app/media

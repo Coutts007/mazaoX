@@ -1,3 +1,5 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -9,6 +11,7 @@ from apps.profiles import selectors as profiles
 from apps.reviews import selectors, services
 from apps.reviews.api.serializers import ReviewInputSerializer, ReviewSerializer
 from core.actor import Actor
+from core.cache import public_cache
 from core.errors import NotFoundError
 from core.pagination import StandardPagination
 
@@ -16,6 +19,7 @@ from core.pagination import StandardPagination
 class OrderReviewView(APIView):
     permission_classes = [IsBuyer]
 
+    @extend_schema(request=ReviewInputSerializer, responses=OpenApiTypes.OBJECT)
     def post(self, request, order_id):
         serializer = ReviewInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -27,6 +31,7 @@ class FarmerReviewListView(APIView):
     permission_classes = [AllowAny]
     authentication_classes: list = []
 
+    @public_cache("reviews", 60)
     def get(self, request, farmer_id):
         if profiles.get_public_farmer(farmer_id) is None:
             raise NotFoundError("Farmer not found.")

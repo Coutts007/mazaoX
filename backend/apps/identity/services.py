@@ -81,3 +81,11 @@ def set_user_active(actor_id, actor_is_admin: bool, user_id, active: bool) -> Us
     user.is_active = active
     user.save(update_fields=["is_active"])
     return user
+
+
+def create_admin(*, email: str, password: str, full_name: str) -> User:
+    """Create an administrator (operators, seed data, CLI). Not reachable from the public API."""
+    email = email.strip().lower()
+    if selectors.email_exists(email):
+        raise IdentityError("This email is already registered.", "email")
+    return User.objects.create_superuser(email=email, password=password, full_name=full_name.strip())

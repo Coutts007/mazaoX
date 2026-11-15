@@ -1,6 +1,7 @@
 from apps.identity import selectors as identity
 from apps.profiles.models import Profile
 from core.actor import Actor
+from core.cache import invalidate
 from core.errors import InvalidInputError, NotFoundError
 from core.kenya import canonical_county
 
@@ -29,4 +30,5 @@ def update_profile(actor: Actor, data: dict) -> Profile:
     for field, value in data.items():
         setattr(profile, field, value)
     profile.save()
+    invalidate("profiles")
     return profile

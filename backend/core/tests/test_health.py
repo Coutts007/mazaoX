@@ -6,10 +6,10 @@ URL = "/api/v1/health"
 
 
 @pytest.mark.django_db
-def test_health_ok():
+def test_health_ok(settings):
     response = APIClient().get(URL)
     assert response.status_code == 200
-    assert response.json() == {"data": {"status": "ok", "database": "up"}}
+    assert response.json() == {"data": {"status": "ok", "database": "up", "cache": "redis" if settings.REDIS_URL else "local"}}
 
 
 def test_health_reports_database_down(monkeypatch):
@@ -19,4 +19,4 @@ def test_health_reports_database_down(monkeypatch):
     monkeypatch.setattr(connection, "cursor", boom)
     response = APIClient().get(URL)
     assert response.status_code == 503
-    assert response.json()["data"] == {"status": "degraded", "database": "down"}
+    assert response.json()["data"]["status"] == "degraded" and response.json()["data"]["database"] == "down"

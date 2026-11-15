@@ -15,6 +15,7 @@ from apps.catalogue import selectors
 from apps.catalogue import media
 from apps.catalogue.models import Category, Listing, ListingMedia, ListingStatus
 from core.actor import Actor
+from core.cache import invalidate
 from core.errors import ConflictError, ForbiddenError, InvalidInputError, NotFoundError
 
 logger = logging.getLogger(__name__)
@@ -48,7 +49,9 @@ def create_listing(actor: Actor, data: dict) -> Listing:
     unknown = set(data) - EDITABLE
     if unknown:
         raise InvalidInputError("Field not accepted.", sorted(unknown)[0])
-    return Listing.objects.create(farmer_id=actor.id, **_clean(data))
+    listing = Listing.objects.create(farmer_id=actor.id, **_clean(data))
+    invalidate("catalogue")
+    return listing
 
 
 def _owned_listing(actor: Actor, listing_id) -> Listing:
@@ -70,6 +73,7 @@ def update_listing(actor: Actor, listing_id, data: dict) -> Listing:
     for field, value in _clean(data).items():
         setattr(listing, field, value)
     listing.save()
+    invalidate("catalogue")
     return listing
 
 
@@ -79,6 +83,7 @@ def deactivate_listing(actor: Actor, listing_id) -> Listing:
     if listing.status != ListingStatus.INACTIVE:
         listing.status = ListingStatus.INACTIVE
         listing.save(update_fields=["status", "updated_at"])
+        invalidate("catalogue")
     return listing
 
 
@@ -96,12 +101,15 @@ def moderate_listing(actor: Actor, listing_id, hide: bool, reason: str = "") -> 
     listing.moderation_hidden = hide
     listing.moderation_reason = reason[:255] if hide else ""
     listing.save(update_fields=["moderation_hidden", "moderation_reason", "updated_at"])
+    invalidate("catalogue")
     return listing
 
 
 def set_owner_suspended(farmer_id, suspended: bool) -> int:
     """Called when a farmer account is suspended or reinstated: hides/shows all their listings."""
-    return Listing.objects.filter(farmer_id=farmer_id).update(owner_suspended=suspended)
+    count = Listing.objects.filter(farmer_id=farmer_id).update(owner_suspended=suspended)
+    invalidate("catalogue")
+    return count
 
 
 @transaction.atomic
@@ -111,6 +119,7 @@ def activate_listing(actor: Actor, listing_id) -> Listing:
     if listing.status != ListingStatus.ACTIVE:
         listing.status = ListingStatus.ACTIVE
         listing.save(update_fields=["status", "updated_at"])
+        invalidate("catalogue")
     return listing
 
 
@@ -126,10 +135,12 @@ def add_media(actor: Actor, listing_id, uploaded) -> ListingMedia:
     clean = media.sanitise(uploaded)
     name = default_storage.save(f"listings/{listing.id}/{uuid.uuid4().hex}.{clean.extension}", ContentFile(clean.data))
     try:
-        return ListingMedia.objects.create(
+        created = ListingMedia.objects.create(
             listing=listing, storage_name=name, content_type=clean.content_type, size_bytes=len(clean.data),
             width=clean.width, height=clean.height, position=listing.media.count(),
         )
+        invalidate("catalogue")
+        return created
     except Exception:
         default_storage.delete(name)  # never leave an orphan file behind
         raise
@@ -144,6 +155,7 @@ def remove_media(actor: Actor, listing_id, media_id) -> None:
         raise NotFoundError("Photo not found.")
     name = item.storage_name
     item.delete()
+    invalidate("catalogue")
     try:
         default_storage.delete(name)
     except Exception:  # noqa: BLE001 - a missing file must not fail the request

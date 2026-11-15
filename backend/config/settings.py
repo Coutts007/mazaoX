@@ -4,6 +4,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+from corsheaders.defaults import default_headers
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 REPO_ROOT = BASE_DIR.parent
@@ -24,6 +25,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
+    "drf_spectacular",
     "rest_framework_simplejwt.token_blacklist",
     "core",
     "apps.identity",
@@ -43,8 +45,11 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "core.middleware.RequestIdMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "core.middleware.ApiNoStoreMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -105,6 +110,57 @@ AUTH_USER_MODEL = "identity.User"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=["http://localhost:5180"])
+CORS_ALLOW_CREDENTIALS = True  # the refresh token travels in an httpOnly cookie
+CORS_ALLOW_HEADERS = [*default_headers, "idempotency-key"]
+CORS_EXPOSE_HEADERS = ["Idempotent-Replay", "X-Request-ID", "X-Cache"]
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+
+# ---- Cache (Redis when REDIS_URL is set, per-process memory otherwise) ----
+REDIS_URL = env("REDIS_URL", default="")
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+            "KEY_PREFIX": "mazaox",
+            "TIMEOUT": 300,
+            "OPTIONS": {"socket_connect_timeout": 1, "socket_timeout": 1},  # fail fast; callers fail open
+        }
+    }
+else:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "KEY_PREFIX": "mazaox"}}
+PUBLIC_CACHE_ENABLED = env.bool("PUBLIC_CACHE_ENABLED", default=True)
+
+# ---- Static files (Django admin CSS) ----
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
+
+# ---- Security ----
+X_FRAME_OPTIONS = "DENY"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+SECURE_SSL = env.bool("SECURE_SSL", default=False)  # set true behind HTTPS in hosted environments
+if SECURE_SSL:
+    SECURE_SSL_REDIRECT = True
+    SECURE_REDIRECT_EXEMPT = [r"^api/v1/health$"]
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = env.int("HSTS_SECONDS", default=31536000)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+# ---- Logging (every line carries the request id) ----
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {"request_id": {"()": "core.middleware.RequestIdFilter"}},
+    "formatters": {"std": {"format": "%(asctime)s %(levelname)s %(name)s [%(request_id)s] %(message)s"}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "filters": ["request_id"], "formatter": "std"}},
+    "root": {"handlers": ["console"], "level": env("LOG_LEVEL", default="INFO")},
+    "loggers": {"django.server": {"level": "WARNING"}},
+}
 
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
@@ -112,8 +168,20 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "core.exceptions.api_exception_handler",
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
-    "DEFAULT_THROTTLE_RATES": {"auth": "20/min"},
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_CLASSES": ["core.throttling.SafeAnonRateThrottle", "core.throttling.SafeUserRateThrottle"],
+    "DEFAULT_THROTTLE_RATES": {"anon": "120/min", "user": "600/min", "auth": "20/min"},
 }
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "MazaoX API",
+    "DESCRIPTION": "Kenyan agricultural produce marketplace (academic prototype). Payments are simulated only.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SCHEMA_PATH_PREFIX": r"/api/v1",
+    "COMPONENT_SPLIT_REQUEST": True,
+}
+API_DOCS_ENABLED = env.bool("API_DOCS_ENABLED", default=DEBUG)
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),

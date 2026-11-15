@@ -1,3 +1,5 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -36,6 +38,7 @@ class InventorySummaryView(APIView):
 class AdjustmentView(APIView):
     permission_classes = [IsFarmer]
 
+    @extend_schema(request=AdjustmentSerializer, responses=OpenApiTypes.OBJECT)
     def post(self, request, listing_id):
         serializer = AdjustmentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

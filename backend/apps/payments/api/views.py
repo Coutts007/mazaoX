@@ -1,3 +1,5 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -23,6 +25,7 @@ class StartPaymentView(APIView):
 class CompletePaymentView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=CompleteSerializer, responses=OpenApiTypes.OBJECT)
     def post(self, request, payment_id):
         serializer = CompleteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

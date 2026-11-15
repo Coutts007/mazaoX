@@ -1,3 +1,5 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -23,6 +25,7 @@ class OrderDeliveryView(APIView):
 class DeliveryDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=StatusUpdateSerializer, responses=OpenApiTypes.OBJECT)
     def patch(self, request, delivery_id):
         serializer = StatusUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
