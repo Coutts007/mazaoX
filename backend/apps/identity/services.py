@@ -3,6 +3,7 @@
 from django.db import IntegrityError, transaction
 
 from apps.identity import selectors
+from apps.identity.contracts import UserView
 from apps.identity.models import Role, User
 from apps.identity.phone import normalise_phone
 
@@ -67,7 +68,7 @@ def get_active_user(user_id) -> User:
     return user
 
 
-def set_user_active(actor_id, actor_is_admin: bool, user_id, active: bool) -> User:
+def set_user_active(actor_id, actor_is_admin: bool, user_id, active: bool) -> UserView:
     """Suspend (active=False) or reinstate a user. Administrators cannot change themselves or other admins."""
     if not actor_is_admin:
         raise IdentityError("Only an administrator can change account status.")
@@ -80,7 +81,7 @@ def set_user_active(actor_id, actor_is_admin: bool, user_id, active: bool) -> Us
         raise IdentityError("Administrator accounts cannot be suspended here.", "user_id")
     user.is_active = active
     user.save(update_fields=["is_active"])
-    return user
+    return selectors.to_view(user)
 
 
 def create_admin(*, email: str, password: str, full_name: str) -> User:
@@ -89,3 +90,6 @@ def create_admin(*, email: str, password: str, full_name: str) -> User:
     if selectors.email_exists(email):
         raise IdentityError("This email is already registered.", "email")
     return User.objects.create_superuser(email=email, password=password, full_name=full_name.strip())
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['IdentityError', 'create_admin', 'register_user', 'set_user_active']

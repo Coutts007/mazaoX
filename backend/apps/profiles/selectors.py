@@ -22,7 +22,7 @@ def get_profile(user_id) -> Profile | None:
 
 def get_public_farmer(farmer_id) -> PublicFarmer | None:
     """Public view of an active farmer. Never exposes email or phone."""
-    user = identity.get_user_by_id(farmer_id)
+    user = identity.find_user(farmer_id)
     if user is None or user.role != "farmer" or not user.is_active:
         return None
     profile = get_profile(user.id)
@@ -35,3 +35,6 @@ def get_public_farmer(farmer_id) -> PublicFarmer | None:
         bio=profile.bio if profile else "",
         member_since=user.date_joined,
     )
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['PublicFarmer', 'get_public_farmer']

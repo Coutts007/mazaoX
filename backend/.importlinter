@@ -1,0 +1,384 @@
+# Import contracts (ADR-004). Run from this directory: `lint-imports` (also run by core/tests/test_import_contracts.py).
+# The allow-list rule is also enforced by core/tests/test_boundaries.py; this file is the same policy in the standard tool.
+# Cross-domain code may import only <domain>.services, <domain>.selectors, <domain>.contracts (and identity.permissions).
+
+[importlinter]
+root_packages =
+    apps
+    core
+include_external_packages = False
+
+[importlinter:contract:administration-internals-are-private]
+name = administration: other domains may only use its services, selectors and contracts
+type = forbidden
+source_modules =
+    apps.audit
+    apps.catalogue
+    apps.delivery
+    apps.demand
+    apps.identity
+    apps.inventory
+    apps.issues
+    apps.notifications
+    apps.orders
+    apps.payments
+    apps.profiles
+    apps.quality
+    apps.reviews
+forbidden_modules =
+    apps.administration.api
+    apps.administration.management
+    apps.administration.migrations
+allow_indirect_imports = True
+
+[importlinter:contract:audit-internals-are-private]
+name = audit: other domains may only use its services, selectors and contracts
+type = forbidden
+source_modules =
+    apps.administration
+    apps.catalogue
+    apps.delivery
+    apps.demand
+    apps.identity
+    apps.inventory
+    apps.issues
+    apps.notifications
+    apps.orders
+    apps.payments
+    apps.profiles
+    apps.quality
+    apps.reviews
+forbidden_modules =
+    apps.audit.admin
+    apps.audit.api
+    apps.audit.handlers
+    apps.audit.migrations
+    apps.audit.models
+allow_indirect_imports = True
+
+[importlinter:contract:catalogue-internals-are-private]
+name = catalogue: other domains may only use its services, selectors and contracts
+type = forbidden
+source_modules =
+    apps.administration
+    apps.audit
+    apps.delivery
+    apps.demand
+    apps.identity
+    apps.inventory
+    apps.issues
+    apps.notifications
+    apps.orders
+    apps.payments
+    apps.profiles
+    apps.quality
+    apps.reviews
+forbidden_modules =
+    apps.catalogue.admin
+    apps.catalogue.api
+    apps.catalogue.media
+    apps.catalogue.migrations
+    apps.catalogue.models
+allow_indirect_imports = True
+
+[importlinter:contract:delivery-internals-are-private]
+name = delivery: other domains may only use its services, selectors and contracts
+type = forbidden
+source_modules =
+    apps.administration
+    apps.audit
+    apps.catalogue
+    apps.demand
+    apps.identity
+    apps.inventory
+    apps.issues
+    apps.notifications
+    apps.orders
+    apps.payments
+    apps.profiles
+    apps.quality
+    apps.reviews
+forbidden_modules =
+    apps.delivery.admin
+    apps.delivery.api
+    apps.delivery.migrations
+    apps.delivery.models
+allow_indirect_imports = True
+
+[importlinter:contract:demand-internals-are-private]
+name = demand: other domains may only use its services, selectors and contracts
+type = forbidden
+source_modules =
+    apps.administration
+    apps.audit
+    apps.catalogue
+    apps.delivery
+    apps.identity
+    apps.inventory
+    apps.issues
+    apps.notifications
+    apps.orders
+    apps.payments
+    apps.profiles
+    apps.quality
+    apps.reviews
+forbidden_modules =
+    apps.demand.admin
+    apps.demand.api
+    apps.demand.management
+    apps.demand.matching
+    apps.demand.migrations
+    apps.demand.models
+allow_indirect_imports = True
+
+[importlinter:contract:identity-internals-are-private]
+name = identity: other domains may only use its services, selectors and contracts
+type = forbidden
+source_modules =
+    apps.administration
+    apps.audit
+    apps.catalogue
+    apps.delivery
+    apps.demand
+    apps.inventory
+    apps.issues
+    apps.notifications
+    apps.orders
+    apps.payments
+    apps.profiles
+    apps.quality
+    apps.reviews
+forbidden_modules =
+    apps.identity.admin
+    apps.identity.api
+    apps.identity.migrations
+    apps.identity.models
+    apps.identity.phone
+allow_indirect_imports = True
+
+[importlinter:contract:inventory-internals-are-private]
+name = inventory: other domains may only use its services, selectors and contracts
+type = forbidden
+source_modules =
+    apps.administration
+    apps.audit
+    apps.catalogue
+    apps.delivery
+    apps.demand
+    apps.identity
+    apps.issues
+    apps.notifications
+    apps.orders
+    apps.payments
+    apps.profiles
+    apps.quality
+    apps.reviews
+forbidden_modules =
+    apps.inventory.admin
+    apps.inventory.api
+    apps.inventory.management
+    apps.inventory.migrations
+    apps.inventory.models
+allow_indirect_imports = True
+
+[importlinter:contract:issues-internals-are-private]
+name = issues: other domains may only use its services, selectors and contracts
+type = forbidden
+source_modules =
+    apps.administration
+    apps.audit
+    apps.catalogue
+    apps.delivery
+    apps.demand
+    apps.identity
+    apps.inventory
+    apps.notifications
+    apps.orders
+    apps.payments
+    apps.profiles
+    apps.quality
+    apps.reviews
+forbidden_modules =
+    apps.issues.admin
+    apps.issues.api
+    apps.issues.migrations
+    apps.issues.models
+allow_indirect_imports = True
+
+[importlinter:contract:notifications-internals-are-private]
+name = notifications: other domains may only use its services, selectors and contracts
+type = forbidden
+source_modules =
+    apps.administration
+    apps.audit
+    apps.catalogue
+    apps.delivery
+    apps.demand
+    apps.identity
+    apps.inventory
+    apps.issues
+    apps.orders
+    apps.payments
+    apps.profiles
+    apps.quality
+    apps.reviews
+forbidden_modules =
+    apps.notifications.admin
+    apps.notifications.api
+    apps.notifications.handlers
+    apps.notifications.migrations
+    apps.notifications.models
+allow_indirect_imports = True
+
+[importlinter:contract:orders-internals-are-private]
+name = orders: other domains may only use its services, selectors and contracts
+type = forbidden
+source_modules =
+    apps.administration
+    apps.audit
+    apps.catalogue
+    apps.delivery
+    apps.demand
+    apps.identity
+    apps.inventory
+    apps.issues
+    apps.notifications
+    apps.payments
+    apps.profiles
+    apps.quality
+    apps.reviews
+forbidden_modules =
+    apps.orders.admin
+    apps.orders.api
+    apps.orders.management
+    apps.orders.migrations
+    apps.orders.models
+allow_indirect_imports = True
+
+[importlinter:contract:payments-internals-are-private]
+name = payments: other domains may only use its services, selectors and contracts
+type = forbidden
+source_modules =
+    apps.administration
+    apps.audit
+    apps.catalogue
+    apps.delivery
+    apps.demand
+    apps.identity
+    apps.inventory
+    apps.issues
+    apps.notifications
+    apps.orders
+    apps.profiles
+    apps.quality
+    apps.reviews
+forbidden_modules =
+    apps.payments.admin
+    apps.payments.api
+    apps.payments.migrations
+    apps.payments.models
+allow_indirect_imports = True
+
+[importlinter:contract:profiles-internals-are-private]
+name = profiles: other domains may only use its services, selectors and contracts
+type = forbidden
+source_modules =
+    apps.administration
+    apps.audit
+    apps.catalogue
+    apps.delivery
+    apps.demand
+    apps.identity
+    apps.inventory
+    apps.issues
+    apps.notifications
+    apps.orders
+    apps.payments
+    apps.quality
+    apps.reviews
+forbidden_modules =
+    apps.profiles.api
+    apps.profiles.migrations
+    apps.profiles.models
+allow_indirect_imports = True
+
+[importlinter:contract:quality-internals-are-private]
+name = quality: other domains may only use its services, selectors and contracts
+type = forbidden
+source_modules =
+    apps.administration
+    apps.audit
+    apps.catalogue
+    apps.delivery
+    apps.demand
+    apps.identity
+    apps.inventory
+    apps.issues
+    apps.notifications
+    apps.orders
+    apps.payments
+    apps.profiles
+    apps.reviews
+forbidden_modules =
+    apps.quality.admin
+    apps.quality.api
+    apps.quality.migrations
+    apps.quality.models
+allow_indirect_imports = True
+
+[importlinter:contract:reviews-internals-are-private]
+name = reviews: other domains may only use its services, selectors and contracts
+type = forbidden
+source_modules =
+    apps.administration
+    apps.audit
+    apps.catalogue
+    apps.delivery
+    apps.demand
+    apps.identity
+    apps.inventory
+    apps.issues
+    apps.notifications
+    apps.orders
+    apps.payments
+    apps.profiles
+    apps.quality
+forbidden_modules =
+    apps.reviews.admin
+    apps.reviews.api
+    apps.reviews.migrations
+    apps.reviews.models
+allow_indirect_imports = True
+
+[importlinter:contract:events-only-for-notifications-and-audit]
+name = Business domains publish events instead of importing notifications/audit services
+type = forbidden
+source_modules =
+    apps.administration
+    apps.catalogue
+    apps.delivery
+    apps.demand
+    apps.identity
+    apps.inventory
+    apps.issues
+    apps.orders
+    apps.payments
+    apps.profiles
+    apps.quality
+    apps.reviews
+forbidden_modules =
+    apps.notifications.services
+    apps.audit.services
+allow_indirect_imports = True
+ignore_imports =
+    apps.**.tests.** -> apps.notifications.services
+    apps.**.tests.** -> apps.audit.services
+
+[importlinter:contract:core-is-independent-of-domains]
+name = core does not depend on any domain app
+type = forbidden
+source_modules =
+    core
+forbidden_modules =
+    apps
+allow_indirect_imports = True

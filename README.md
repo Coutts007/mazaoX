@@ -25,11 +25,18 @@ a test (`core/tests/test_boundaries.py`) fails if a domain imports another domai
 | demand | buyer demand requests and matching |
 | audit / administration | audit log, admin operations and reports |
 
+### Domain contracts (loose coupling)
+- A domain's `services.py` / `selectors.py` declare their public contract in `__all__`; other domains may import only those modules
+  (plus `contracts.py` DTOs and `identity.permissions`). They receive frozen dataclasses (DTOs), never models or serializers of another domain.
+- Notifications and audit are driven by domain events (`core/events.py`), not by imports from business domains.
+- Enforced by `core/tests/test_boundaries.py` and `import-linter` (`cd backend && lint-imports`). See ADR-004.
+
 ## Run with Docker (recommended)
 ```bash
 cp .env.example .env                 # then set real local values (never commit .env)
-docker compose up -d --build         # db :5433, redis :6380, API :8010, scheduler
-docker compose exec backend python manage.py seed_demo      # optional synthetic demo data
+docker compose up --build            # db :5433, redis :6380, API :8010, scheduler (add -d to detach)
+# optional synthetic demo data: set SEED_DEMO=true in .env before `up`, or:
+docker compose exec backend python manage.py seed_demo
 curl http://localhost:8010/api/v1/health
 ```
 - API docs (development): http://localhost:8010/api/v1/docs (OpenAPI: `/api/v1/schema`)
@@ -46,7 +53,8 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r backend/requirements-dev.txt
 docker compose up -d db redis        # redis is optional (set REDIS_URL to use it)
 cd backend && python manage.py migrate && python manage.py runserver 8010
-python -m pytest                     # ~310 tests, needs PostgreSQL on :5433
+python -m pytest                     # ~320 tests, needs PostgreSQL on :5433
+lint-imports                         # architecture contracts (run from backend/)
 ```
 
 ## API overview (`/api/v1`, JSON, pagination via `page` / `page_size`, max 100)

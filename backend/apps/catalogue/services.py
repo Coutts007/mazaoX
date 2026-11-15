@@ -13,6 +13,7 @@ from django.db import transaction
 
 from apps.catalogue import selectors
 from apps.catalogue import media
+from apps.catalogue.contracts import ListingSummary
 from apps.catalogue.models import Category, Listing, ListingMedia, ListingStatus
 from core.actor import Actor
 from core.cache import invalidate
@@ -88,7 +89,7 @@ def deactivate_listing(actor: Actor, listing_id) -> Listing:
 
 
 @transaction.atomic
-def moderate_listing(actor: Actor, listing_id, hide: bool, reason: str = "") -> Listing:
+def moderate_listing(actor: Actor, listing_id, hide: bool, reason: str = "") -> ListingSummary:
     """Administrators hide or restore a listing. Hiding requires a reason."""
     if not actor.is_admin:
         raise ForbiddenError("Only an administrator can moderate listings.")
@@ -102,7 +103,7 @@ def moderate_listing(actor: Actor, listing_id, hide: bool, reason: str = "") -> 
     listing.moderation_reason = reason[:255] if hide else ""
     listing.save(update_fields=["moderation_hidden", "moderation_reason", "updated_at"])
     invalidate("catalogue")
-    return listing
+    return selectors.to_summary(listing)
 
 
 def set_owner_suspended(farmer_id, suspended: bool) -> int:
@@ -160,3 +161,6 @@ def remove_media(actor: Actor, listing_id, media_id) -> None:
         default_storage.delete(name)
     except Exception:  # noqa: BLE001 - a missing file must not fail the request
         logger.exception("Could not delete stored file %s", name)
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['create_listing', 'update_listing', 'deactivate_listing', 'moderate_listing', 'set_owner_suspended']

@@ -9,11 +9,9 @@ from apps.administration import services
 from apps.administration.api import serializers as s
 from apps.audit import selectors as audit
 from apps.catalogue import selectors as catalogue
-from apps.catalogue.api.serializers import ListingSerializer
 from apps.identity import selectors as identity
 from apps.identity.permissions import IsAdmin
 from apps.issues import selectors as issues
-from apps.issues.api.serializers import IssueSerializer
 from apps.reviews import selectors as reviews
 from core.actor import Actor
 from core.pagination import StandardPagination
@@ -66,7 +64,7 @@ class ListingsView(_AdminView):
                    "status": request.query_params.get("status", "")}
         if filters["status"] and filters["status"] not in ("active", "inactive"):
             raise ValidationError({"status": ["Unknown status."]})
-        return self.paged(request, catalogue.list_for_moderation(filters), ListingSerializer)
+        return self.paged(request, catalogue.list_for_moderation(filters), s.AdminListingSerializer)
 
 
 class ListingModerationView(_AdminView):
@@ -75,7 +73,7 @@ class ListingModerationView(_AdminView):
         ser = s.ModerationSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
         listing = services.moderate_listing(self.actor(request), listing_id, ser.validated_data["hidden"], ser.validated_data.get("reason", ""))
-        return Response({"data": ListingSerializer(listing).data})
+        return Response({"data": s.AdminListingSerializer(listing).data})
 
 
 class IssuesView(_AdminView):
@@ -83,7 +81,7 @@ class IssuesView(_AdminView):
         status = request.query_params.get("status", "")
         if status and status not in ("open", "investigating", "resolved", "dismissed"):
             raise ValidationError({"status": ["Unknown status."]})
-        return self.paged(request, issues.list_all(status), IssueSerializer)
+        return self.paged(request, issues.list_all(status), s.AdminIssueSerializer)
 
 
 class IssueDetailView(_AdminView):
@@ -92,7 +90,7 @@ class IssueDetailView(_AdminView):
         ser = s.IssueUpdateSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
         issue = services.update_issue(self.actor(request), issue_id, **ser.validated_data)
-        return Response({"data": IssueSerializer(issue).data})
+        return Response({"data": s.AdminIssueSerializer(issue).data})
 
 
 class ReviewsView(_AdminView):

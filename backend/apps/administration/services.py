@@ -5,7 +5,6 @@ Administration owns no business data; it never bypasses a domain's rules.
 
 from django.db import transaction
 
-from apps.audit.services import record
 from apps.catalogue import selectors as catalogue_selectors
 from apps.catalogue import services as catalogue
 from apps.delivery import selectors as delivery_selectors
@@ -19,6 +18,7 @@ from apps.payments import selectors as payment_selectors
 from apps.quality import selectors as quality_selectors
 from apps.reviews import selectors as review_selectors
 from apps.reviews import services as reviews
+from core import events
 from core.actor import Actor
 from core.cache import invalidate
 from core.errors import ForbiddenError, InvalidInputError, NotFoundError
@@ -46,7 +46,7 @@ def set_user_status(actor: Actor, user_id, active: bool, reason: str = ""):
         hidden = catalogue.set_owner_suspended(user.id, not active)
     invalidate("profiles")
     invalidate("reviews")
-    record(actor.id, "user.reinstated" if active else "user.suspended", "user", user.id, {"reason": reason[:255], "listings_affected": hidden})
+    events.publish("user.status_changed", actor_id=str(actor.id), user_id=str(user.id), active=active, reason=reason[:255], listings_affected=hidden)
     return user
 
 
@@ -54,7 +54,7 @@ def set_user_status(actor: Actor, user_id, active: bool, reason: str = ""):
 def moderate_listing(actor: Actor, listing_id, hidden: bool, reason: str = ""):
     _require_admin(actor)
     listing = catalogue.moderate_listing(actor, listing_id, hidden, reason)
-    record(actor.id, "listing.hidden" if hidden else "listing.restored", "listing", listing.id, {"reason": (reason or "").strip()[:255]})
+    events.publish("listing.moderated", actor_id=str(actor.id), listing_id=str(listing.id), hidden=hidden, reason=(reason or "").strip()[:255])
     return listing
 
 
@@ -62,7 +62,7 @@ def moderate_listing(actor: Actor, listing_id, hidden: bool, reason: str = ""):
 def update_issue(actor: Actor, issue_id, status: str, resolution: str = ""):
     _require_admin(actor)
     issue = issues.update_issue(actor, issue_id, status, resolution)
-    record(actor.id, "issue.updated", "issue", issue.id, {"status": status})
+    events.publish("issue.triaged", actor_id=str(actor.id), issue_id=str(issue.id), status=status)
     return issue
 
 
@@ -70,7 +70,7 @@ def update_issue(actor: Actor, issue_id, status: str, resolution: str = ""):
 def moderate_review(actor: Actor, review_id, hidden: bool, reason: str = ""):
     _require_admin(actor)
     review = reviews.set_hidden(actor, review_id, hidden, reason)
-    record(actor.id, "review.hidden" if hidden else "review.restored", "review", review.id, {"reason": (reason or "").strip()[:255]})
+    events.publish("review.moderated", actor_id=str(actor.id), review_id=str(review.id), hidden=hidden, reason=(reason or "").strip()[:255])
     return review
 
 
@@ -87,3 +87,6 @@ def summary(actor: Actor) -> dict:
         "inspections": quality_selectors.stats(),
         "demand_requests": demand_selectors.stats(),
     }
+
+
+__all__ = ["set_user_status", "moderate_listing", "update_issue", "moderate_review", "summary"]

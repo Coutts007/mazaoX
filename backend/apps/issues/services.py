@@ -1,9 +1,10 @@
 from django.db import transaction
 
 from apps.issues import selectors
+from apps.issues.contracts import IssueView
 from apps.issues.models import Issue, IssueCategory, IssueStatus
-from apps.notifications.services import notify
 from apps.orders import selectors as orders
+from core import events
 from core.actor import Actor
 from core.errors import ConflictError, ForbiddenError, InvalidInputError, NotFoundError
 
@@ -37,7 +38,7 @@ def list_my_order_issues(actor: Actor, order_id):
 
 
 @transaction.atomic
-def update_issue(actor: Actor, issue_id, status: str, resolution: str = "") -> Issue:
+def update_issue(actor: Actor, issue_id, status: str, resolution: str = "") -> IssueView:
     """Admin triage. Resolving or dismissing requires a resolution note and notifies the reporter."""
     if not actor.is_admin:
         raise ForbiddenError("Only an administrator can handle issues.")
@@ -58,5 +59,8 @@ def update_issue(actor: Actor, issue_id, status: str, resolution: str = "") -> I
         issue.resolution = resolution
     issue.save()
     if changed:
-        notify(issue.reporter_id, "issue_updated", "Issue update", f"Your issue is now {status}.", issue.order_id)
-    return issue
+        events.publish("issue.updated", order_id=str(issue.order_id), reporter_id=str(issue.reporter_id), status=status)
+    return selectors.to_view(issue)
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['update_issue']

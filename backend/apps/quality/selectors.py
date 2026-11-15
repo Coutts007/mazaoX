@@ -21,3 +21,6 @@ def get_inspection(inspection_id) -> Inspection | None:
 
 def stats() -> dict:
     return {"total": Inspection.objects.count(), "published": Inspection.objects.filter(is_published=True).count()}
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['stats']

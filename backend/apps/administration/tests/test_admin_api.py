@@ -47,7 +47,7 @@ def test_suspend_farmer_hides_listings_blocks_login_and_is_audited(market):
     # reinstating restores everything
     c.patch(f"{A}/users/{market.farmer.id}/status", {"is_active": True}, format="json")
     assert market.client().get(f"/api/v1/listings/{lid}").status_code == 200
-    log = audit.search(action="user.suspended").get()
+    (log,) = list(audit.search(action="user.suspended"))
     assert log.actor_id == market.admin.id and log.detail["reason"] == "Fraud reports" and log.detail["listings_affected"] == 1
     assert audit.search(action="user.reinstated").count() == 1
 

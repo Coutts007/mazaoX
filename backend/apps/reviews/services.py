@@ -1,9 +1,10 @@
 from django.db import IntegrityError, transaction
 
-from apps.notifications.services import notify
 from apps.orders import selectors as orders
 from apps.reviews import selectors
+from apps.reviews.contracts import ReviewView
 from apps.reviews.models import Review
+from core import events
 from core.actor import Actor
 from core.cache import invalidate
 from core.errors import ConflictError, ForbiddenError, InvalidInputError, NotFoundError
@@ -28,12 +29,12 @@ def create_review(actor: Actor, order_id, rating: int, comment: str = "") -> Rev
     except IntegrityError as exc:
         raise ConflictError("This order has already been reviewed.", code="REVIEW_EXISTS") from exc
     invalidate("reviews")
-    notify(order.farmer_id, "review_received", "New review", f"A buyer left you a {rating}-star review.", order.id)
+    events.publish("review.created", order_id=str(order.id), farmer_id=str(order.farmer_id), rating=rating)
     return review
 
 
 @transaction.atomic
-def set_hidden(actor: Actor, review_id, hidden: bool, reason: str = "") -> Review:
+def set_hidden(actor: Actor, review_id, hidden: bool, reason: str = "") -> ReviewView:
     """Admin moderation. A hidden review is excluded from public lists and averages."""
     if not actor.is_admin:
         raise ForbiddenError("Only an administrator can moderate reviews.")
@@ -44,4 +45,7 @@ def set_hidden(actor: Actor, review_id, hidden: bool, reason: str = "") -> Revie
     review.moderation_reason = (reason or "").strip()[:255] if hidden else ""
     review.save(update_fields=["is_hidden", "moderation_reason"])
     invalidate("reviews")
-    return review
+    return selectors.to_view(review)
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['create_review', 'set_hidden']

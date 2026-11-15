@@ -75,3 +75,6 @@ def stats() -> dict:
     by_status = {r["status"]: r["n"] for r in Order.objects.values("status").annotate(n=Count("id"))}
     revenue = Order.objects.filter(status__in=[OrderStatus.PAID, OrderStatus.COMPLETED]).aggregate(total=Sum("total_amount"))["total"]
     return {"total": sum(by_status.values()), "by_status": by_status, "paid_value_ksh": str(revenue or Decimal("0.00"))}
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['OrderSnapshot', 'get_order_snapshot', 'stats']

@@ -44,11 +44,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if not settings.DEBUG and not options["force"]:
             raise CommandError("Refusing to seed demo data while DEBUG is off (use --force if you really mean it).")
-        if identity_selectors.get_user_by_identifier(FARMERS[0][1]):
+        if identity_selectors.find_user_by_identifier(FARMERS[0][1]):
             self.stdout.write("Demo data already present; nothing to do.")
             return
         pw = options["password"]
-        categories = {c.slug: c for c in catalogue_selectors.list_categories()}
+        categories = {c.slug: c for c in catalogue_selectors.category_refs()}
 
         admin = identity.create_admin(email="admin.demo@example.test", password=pw, full_name="Admin Demo")
         farmers = [identity.register_user(full_name=n, email=e, password=pw, role="farmer") for n, e, _, _ in FARMERS]

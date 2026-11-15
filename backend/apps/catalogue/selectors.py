@@ -7,8 +7,10 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db.models import Q, QuerySet
 
+from apps.catalogue.contracts import CategoryRef, ImageRef, ListingSummary
 from apps.catalogue.models import Category, Listing, ListingMedia, ListingStatus, QuantityUnit
 from core.actor import Actor
+from core.dto import MappedQuery
 
 
 @dataclass(frozen=True)
@@ -21,6 +23,20 @@ class ListingSnapshot:
     price_per_unit: Decimal
     quantity_unit: str
     is_active: bool
+
+
+def to_summary(listing: Listing) -> ListingSummary:
+    """Map a Listing to the DTO other domains receive (the model never leaves this domain)."""
+    return ListingSummary(
+        id=listing.id, farmer_id=listing.farmer_id,
+        category=CategoryRef(listing.category.id, listing.category.name, listing.category.slug),
+        produce_name=listing.produce_name, variety=listing.variety, description=listing.description,
+        declared_grade=listing.declared_grade, price_per_unit=listing.price_per_unit, quantity_unit=listing.quantity_unit,
+        county=listing.county, locality=listing.locality, harvest_date=listing.harvest_date, status=listing.status,
+        moderation_hidden=listing.moderation_hidden, moderation_reason=listing.moderation_reason,
+        images=tuple(ImageRef(m.id, m.width, m.height, m.position) for m in listing.media.all()),
+        created_at=listing.created_at, updated_at=listing.updated_at,
+    )
 
 
 def _publicly_visible(listing: Listing) -> bool:
@@ -103,9 +119,9 @@ def search_listings(filters: dict, actor: Actor | None = None) -> QuerySet[Listi
     return qs.order_by(*ORDERINGS.get(filters.get("ordering") or "newest", ORDERINGS["newest"]))
 
 
-def list_for_moderation(filters: dict) -> QuerySet[Listing]:
-    """Every listing regardless of visibility (administrators only; callers enforce that)."""
-    qs = Listing.objects.select_related("category")
+def list_for_moderation(filters: dict) -> MappedQuery:
+    """Every listing regardless of visibility, as DTOs (administrators only; callers enforce that)."""
+    qs = Listing.objects.select_related("category").prefetch_related("media")
     if v := filters.get("status"):
         qs = qs.filter(status=v)
     if (v := filters.get("hidden")) is not None:
@@ -114,7 +130,20 @@ def list_for_moderation(filters: dict) -> QuerySet[Listing]:
         qs = qs.filter(Q(produce_name__icontains=v) | Q(variety__icontains=v) | Q(description__icontains=v))
     if v := filters.get("farmer_id"):
         qs = qs.filter(farmer_id=v)
-    return qs
+    return MappedQuery(qs, to_summary)
+
+
+def listing_exists(listing_id) -> bool:
+    return _get(listing_id) is not None
+
+
+def category_refs() -> list[CategoryRef]:
+    return [CategoryRef(c.id, c.name, c.slug) for c in list_categories()]
+
+
+def find_listings(filters: dict, limit: int = 100) -> list[ListingSummary]:
+    """Publicly visible listings matching `filters`, as DTOs, for other domains (e.g. demand matching)."""
+    return [to_summary(listing) for listing in search_listings(filters)[:limit]]
 
 
 def stats() -> dict:
@@ -138,3 +167,6 @@ def get_public_media(media_id) -> ListingMedia | None:
     except (ValueError, TypeError, ValidationError):
         return None
     return item if item is not None and _publicly_visible(item.listing) else None
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['ListingSnapshot', 'get_listing_snapshot', 'list_for_moderation', 'listing_exists', 'category_refs', 'find_listings', 'quantity_units', 'stats']

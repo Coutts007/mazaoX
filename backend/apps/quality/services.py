@@ -2,10 +2,10 @@ from datetime import date
 
 from django.db import transaction
 
-from apps.audit.services import record
 from apps.catalogue import selectors as catalogue
 from apps.quality import selectors
 from apps.quality.models import Inspection, InspectionResult, InspectionRevision
+from core import events
 from core.actor import Actor
 from core.errors import ForbiddenError, InvalidInputError, NotFoundError
 
@@ -29,7 +29,7 @@ def _validate(data: dict) -> None:
 @transaction.atomic
 def create_inspection(actor: Actor, listing_id, data: dict) -> Inspection:
     _require_admin(actor)
-    if catalogue.get_listing(listing_id) is None:
+    if not catalogue.listing_exists(listing_id):
         raise NotFoundError("Listing not found.")
     missing = {"inspected_on", "scope", "result"} - set(data)
     if missing:
@@ -39,7 +39,7 @@ def create_inspection(actor: Actor, listing_id, data: dict) -> Inspection:
         raise InvalidInputError("Field not accepted.", sorted(unknown)[0])
     _validate(data)
     inspection = Inspection.objects.create(listing_id=listing_id, inspector_id=actor.id, **data)
-    record(actor.id, "inspection.created", "inspection", inspection.id, {"listing_id": str(listing_id), "result": inspection.result})
+    events.publish("inspection.created", actor_id=str(actor.id), inspection_id=str(inspection.id), listing_id=str(listing_id), result=inspection.result)
     return inspection
 
 
@@ -69,5 +69,8 @@ def correct_inspection(actor: Actor, inspection_id, data: dict, reason: str) -> 
     for field, value in data.items():
         setattr(inspection, field, value)
     inspection.save()
-    record(actor.id, "inspection.corrected", "inspection", inspection.id, {"fields": sorted(data), "reason": reason[:255]})
+    events.publish("inspection.corrected", actor_id=str(actor.id), inspection_id=str(inspection.id), fields=sorted(data), reason=reason[:255])
     return inspection
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['create_inspection']

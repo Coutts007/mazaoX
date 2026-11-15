@@ -17,7 +17,7 @@ def update_profile(actor: Actor, data: dict) -> Profile:
     unknown = set(data) - EDITABLE
     if unknown:
         raise InvalidInputError(f"Field not editable: {sorted(unknown)[0]}.", sorted(unknown)[0])
-    if identity.get_user_by_id(actor.id) is None:
+    if identity.find_user(actor.id) is None:
         raise NotFoundError("Account not found.")
     if "county" in data and data["county"]:
         county = canonical_county(data["county"])
@@ -32,3 +32,6 @@ def update_profile(actor: Actor, data: dict) -> Profile:
     profile.save()
     invalidate("profiles")
     return profile
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = []

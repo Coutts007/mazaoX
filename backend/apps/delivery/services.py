@@ -4,9 +4,9 @@ from django.db import IntegrityError, transaction
 
 from apps.delivery import selectors
 from apps.delivery.models import Delivery, DeliveryEvent, DeliveryStatus
-from apps.notifications.services import notify
 from apps.orders import selectors as orders
 from apps.orders import services as order_services
+from core import events
 from core.actor import Actor
 from core.errors import ConflictError, ForbiddenError, InvalidInputError, NotFoundError
 
@@ -17,14 +17,6 @@ ALLOWED = {
     S.FAILED: {S.PENDING},  # re-schedule after a failed attempt
     S.DELIVERED: set(),
 }
-_MESSAGES = {
-    S.DISPATCHED: ("Order on its way", "Your order is dispatched or ready for collection."),
-    S.DELIVERED: ("Order delivered", "Your order was delivered or collected. Thank you for using MazaoX."),
-    S.FAILED: ("Delivery problem", "There was a problem with your delivery. We will be in touch."),
-    S.PENDING: ("Delivery rescheduled", "Your delivery was rescheduled."),
-}
-
-
 def _require_admin(actor: Actor) -> None:
     if not actor.is_admin:
         raise ForbiddenError("Only an administrator can manage deliveries.")
@@ -78,6 +70,8 @@ def update_status(actor: Actor, delivery_id, new_status: str, note: str = "") ->
     DeliveryEvent.objects.create(delivery=delivery, from_status=previous, to_status=new_status, actor_id=actor.id, note=(note or "").strip()[:255])
     if new_status == S.DELIVERED:
         order_services.complete_order(delivery.order_id, actor.id, "Delivery completed")
-    title, message = _MESSAGES[S(new_status)]
-    notify(delivery.buyer_id, f"delivery_{new_status}", title, message, delivery.order_id)
+    events.publish("delivery.status_changed", order_id=str(delivery.order_id), buyer_id=str(delivery.buyer_id), status=str(new_status))
     return selectors.get_delivery(delivery.id)
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['create_delivery', 'update_status']

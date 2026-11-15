@@ -105,3 +105,6 @@ def listing_ids_with_min_available(minimum: Decimal):
         .filter(free__gte=minimum, free__gt=0)
         .values_list("listing_id", flat=True)
     )
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['get_availability', 'get_availability_bulk', 'listing_ids_with_min_available']

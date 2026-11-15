@@ -6,7 +6,7 @@ from apps.catalogue import selectors as catalogue
 from apps.demand import selectors
 from apps.demand.matching import find_matches
 from apps.demand.models import DemandRequest, DemandStatus
-from apps.notifications.services import notify
+from core import events
 from core.actor import Actor
 from core.errors import ConflictError, ForbiddenError, InvalidInputError, NotFoundError
 from core.kenya import canonical_county
@@ -42,8 +42,8 @@ def create_request(actor: Actor, data: dict) -> DemandRequest:
         # Tell the farmers who already sell this produce. The message never names the buyer.
         farmers = list(dict.fromkeys(m.listing.farmer_id for m in find_matches(request)))[:MAX_FARMERS_NOTIFIED]
         for farmer_id in farmers:
-            notify(farmer_id, "demand_match", "A buyer wants your produce",
-                   f"A buyer is looking for {request.quantity.normalize():f} {request.quantity_unit} of {request.produce_name} in {request.county}.")
+            events.publish("demand.matched", farmer_id=str(farmer_id), produce_name=request.produce_name,
+                           quantity=str(request.quantity), quantity_unit=request.quantity_unit, county=request.county)
     return request
 
 
@@ -71,3 +71,6 @@ def matches_for(actor: Actor, request_id):
 def expire_overdue(today=None) -> int:
     today = today or date.today()
     return DemandRequest.objects.filter(status=DemandStatus.OPEN, required_by__lt=today).update(status=DemandStatus.EXPIRED)
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['create_request']

@@ -36,7 +36,8 @@ def test_start_ignores_body_and_stores_no_credentials(shop):
     assert r.status_code == 201
     text = json.dumps(r.json())
     assert r.json()["data"]["amount"] == "850.00"
-    assert "1234" not in text and "0712345678" not in text and "pin" not in r.json()["data"]
+    # Check the keys: a random UUID or timestamp can contain the digits "1234" by chance, so scanning the text is flaky.
+    assert not {"pin", "card_cvv", "phone", "msisdn"} & set(r.json()["data"]) and "0712345678" not in text
 
 
 def test_start_authorization(shop):

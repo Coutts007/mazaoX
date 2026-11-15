@@ -1,7 +1,9 @@
 from django.core.exceptions import ValidationError
 from django.db.models import Avg, Count, QuerySet
 
+from apps.reviews.contracts import ReviewView
 from apps.reviews.models import Review
+from core.dto import MappedQuery
 
 
 def list_for_farmer(farmer_id) -> QuerySet[Review]:
@@ -25,9 +27,16 @@ def get_review(review_id) -> Review | None:
         return None
 
 
-def list_all() -> QuerySet[Review]:
-    return Review.objects.all()
+def to_view(r: Review) -> ReviewView:
+    return ReviewView(r.id, r.order_id, r.buyer_id, r.farmer_id, r.rating, r.comment, r.is_hidden, r.moderation_reason, r.created_at)
+
+
+def list_all() -> MappedQuery:
+    return MappedQuery(Review.objects.all(), to_view)
 
 
 def stats() -> dict:
     return {"total": Review.objects.count(), "hidden": Review.objects.filter(is_hidden=True).count()}
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['list_all', 'stats']

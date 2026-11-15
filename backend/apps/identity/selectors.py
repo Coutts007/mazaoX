@@ -2,12 +2,27 @@
 
 import uuid
 
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 
-from django.core.exceptions import ValidationError
-
+from apps.identity.contracts import UserView
 from apps.identity.models import User
 from apps.identity.phone import normalise_phone
+from core.dto import MappedQuery
+
+
+def to_view(user: User) -> UserView:
+    return UserView(user.id, user.full_name, user.email, user.phone, user.role, user.is_active, user.date_joined)
+
+
+def find_user(user_id) -> UserView | None:
+    user = get_user_by_id(user_id)
+    return to_view(user) if user else None
+
+
+def find_user_by_identifier(identifier: str) -> UserView | None:
+    user = get_user_by_identifier(identifier)
+    return to_view(user) if user else None
 
 
 def get_user_by_id(user_id: uuid.UUID | str) -> User | None:
@@ -40,7 +55,7 @@ def get_display_names(user_ids) -> dict[str, str]:
     return {str(pk): (name.split() or ["User"])[0] for pk, name in rows}
 
 
-def search_users(q: str = "", role: str = "", is_active: bool | None = None):
+def search_users(q: str = "", role: str = "", is_active: bool | None = None) -> MappedQuery:
     qs = User.objects.all().order_by("-date_joined", "-id")
     if q:
         qs = qs.filter(Q(email__icontains=q) | Q(phone__icontains=q) | Q(full_name__icontains=q))
@@ -48,7 +63,7 @@ def search_users(q: str = "", role: str = "", is_active: bool | None = None):
         qs = qs.filter(role=role)
     if is_active is not None:
         qs = qs.filter(is_active=is_active)
-    return qs
+    return MappedQuery(qs, to_view)
 
 
 def stats() -> dict:
@@ -56,3 +71,6 @@ def stats() -> dict:
 
     by_role = {r["role"]: r["n"] for r in User.objects.values("role").annotate(n=Count("id"))}
     return {"total": sum(by_role.values()), "by_role": by_role, "suspended": User.objects.filter(is_active=False).count()}
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['find_user', 'find_user_by_identifier', 'get_display_names', 'search_users', 'stats']

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from apps.catalogue import selectors as catalogue
+from apps.catalogue.contracts import ListingSummary
 from apps.demand.models import DemandRequest
 from apps.inventory import selectors as inventory
 
@@ -16,14 +17,14 @@ MAX_RESULTS = 20
 
 @dataclass(frozen=True)
 class Match:
-    listing: object
+    listing: ListingSummary
     score: int
     reasons: list
     available: Decimal
 
 
 def find_matches(request: DemandRequest) -> list[Match]:
-    candidates = catalogue.search_listings({"q": request.produce_name})[:MAX_CANDIDATES]
+    candidates = catalogue.find_listings({"q": request.produce_name}, MAX_CANDIDATES)
     matches = []
     for listing in candidates:
         reasons, score = ["name"], 40

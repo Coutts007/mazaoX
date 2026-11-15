@@ -32,3 +32,6 @@ def stats() -> dict:
     from django.db.models import Count
 
     return {"by_status": {r["status"]: r["n"] for r in PaymentAttempt.objects.values("status").annotate(n=Count("id"))}}
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['stats']

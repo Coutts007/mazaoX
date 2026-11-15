@@ -74,7 +74,7 @@ def test_correction_keeps_revision_and_audit(market):
     assert r.status_code == 200 and r.json()["data"]["result"] == "passed_with_notes"
     rev = InspectionRevision.objects.get()
     assert rev.snapshot["result"] == "passed" and rev.reason == "Re-checked sample"
-    assert audit.search(action="inspection.corrected").get().detail["fields"] == ["notes", "result"]
+    assert [e.detail["fields"] for e in audit.search(action="inspection.corrected")] == [["notes", "result"]]
     assert c.patch("/api/v1/inspections/00000000-0000-0000-0000-000000000000", {"notes": "x", "reason": "r"}, format="json").status_code == 404
 
 

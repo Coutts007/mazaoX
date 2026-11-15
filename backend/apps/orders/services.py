@@ -17,9 +17,9 @@ from django.utils import timezone
 
 from apps.catalogue import selectors as catalogue
 from apps.inventory import services as inventory
-from apps.notifications.services import notify
 from apps.orders import selectors
 from apps.orders.models import DeliveryMethod, Order, OrderLine, OrderStatus, OrderStatusHistory
+from core import events
 from core.actor import Actor
 from core.errors import ConflictError, DomainError, ForbiddenError, InvalidInputError, NotFoundError
 
@@ -123,8 +123,8 @@ def create_order(
                     quantity=quantity, quantity_unit=listing.quantity_unit, line_total=line_total, reservation_id=reservation.id,
                 )
             _record(order, "", OrderStatus.PENDING_PAYMENT, actor.id, "Order placed")
-            notify(order.buyer_id, "order_placed", "Order placed", f"Your {_label(order)} was placed. Pay within {settings.RESERVATION_TTL_MINUTES} minutes to confirm it.", order.id)
-            notify(order.farmer_id, "order_received", "New order", f"You have a new {_label(order)} awaiting payment.", order.id)
+            events.publish("order.placed", order_id=str(order.id), buyer_id=str(order.buyer_id), farmer_id=str(order.farmer_id),
+                           label=_label(order), ttl_minutes=settings.RESERVATION_TTL_MINUTES)
     except IntegrityError:
         # Concurrent request with the same idempotency key won the race: return its order.
         if idempotency_key:
@@ -155,8 +155,8 @@ def cancel_order(actor: Actor, order_id, reason: str = "") -> Order:
     previous, order.status = order.status, OrderStatus.CANCELLED
     order.save(update_fields=["status", "updated_at"])
     _record(order, previous, order.status, actor.id, (reason or "").strip()[:255])
-    for user_id in {order.buyer_id, order.farmer_id} - {actor.id}:
-        notify(user_id, "order_cancelled", "Order cancelled", f"The {_label(order)} was cancelled.", order.id)
+    events.publish("order.cancelled", order_id=str(order.id), buyer_id=str(order.buyer_id), farmer_id=str(order.farmer_id),
+                   label=_label(order), cancelled_by=str(actor.id))
     return selectors.get_order(order.id)
 
 
@@ -176,7 +176,7 @@ def expire_unpaid_orders(now=None) -> int:
             order.status = OrderStatus.EXPIRED
             order.save(update_fields=["status", "updated_at"])
             _record(order, OrderStatus.PENDING_PAYMENT, OrderStatus.EXPIRED, None, "Payment window elapsed")
-            notify(order.buyer_id, "order_expired", "Order expired", f"The {_label(order)} expired because it was not paid in time.", order.id)
+            events.publish("order.expired", order_id=str(order.id), buyer_id=str(order.buyer_id), label=_label(order))
             count += 1
     return count
 
@@ -201,8 +201,7 @@ def confirm_payment(order_id, reference: str = "") -> Order:
     order.status = OrderStatus.PAID
     order.save(update_fields=["status", "updated_at"])
     _record(order, OrderStatus.PENDING_PAYMENT, OrderStatus.PAID, None, f"Payment confirmed {reference}".strip())
-    notify(order.buyer_id, "payment_received", "Payment received", f"Payment for {_label(order)} was received.", order.id)
-    notify(order.farmer_id, "order_paid", "Order paid", f"The {_label(order)} is paid. Please prepare it.", order.id)
+    events.publish("order.paid", order_id=str(order.id), buyer_id=str(order.buyer_id), farmer_id=str(order.farmer_id), label=_label(order))
     return selectors.get_order(order.id)
 
 
@@ -221,3 +220,6 @@ def complete_order(order_id, actor_id=None, note: str = "") -> Order:
     order.save(update_fields=["status", "updated_at"])
     _record(order, OrderStatus.PAID, OrderStatus.COMPLETED, actor_id, note)
     return selectors.get_order(order.id)
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['create_order', 'cancel_order', 'complete_order', 'confirm_payment', 'expire_unpaid_orders']

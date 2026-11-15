@@ -18,3 +18,6 @@ def get_for_recipient(notification_id, recipient_id) -> Notification | None:
         return Notification.objects.filter(pk=notification_id, recipient_id=recipient_id).first()
     except (ValueError, TypeError, ValidationError):
         return None
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['list_for_recipient']

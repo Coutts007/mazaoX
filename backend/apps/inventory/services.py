@@ -153,3 +153,6 @@ def expire_reservations(now=None) -> int:
     return Reservation.objects.filter(status=ReservationStatus.ACTIVE, expires_at__lte=now).update(
         status=ReservationStatus.EXPIRED, resolved_at=now
     )
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['adjust_stock', 'reserve_stock', 'commit_reservation', 'release_reservation']

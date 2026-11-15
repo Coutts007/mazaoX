@@ -38,3 +38,6 @@ def mark_read(actor: Actor, notification_id) -> Notification:
         notification.read_at = timezone.now()
         notification.save(update_fields=["is_read", "read_at"])
     return notification
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['notify', 'mark_read']

@@ -33,3 +33,6 @@ def list_open_for_market(produce: str = "", county: str = "") -> QuerySet[Demand
 
 def stats() -> dict:
     return {"by_status": {r["status"]: r["n"] for r in DemandRequest.objects.values("status").annotate(n=Count("id"))}}
+
+# Public contract of this module: the only names other domains may use (enforced by core/tests/test_boundaries.py).
+__all__ = ['stats']
