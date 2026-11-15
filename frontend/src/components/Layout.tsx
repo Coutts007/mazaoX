@@ -76,7 +76,7 @@ function CartButton() {
   return (
     <Link to="/cart" className="icon-btn" aria-label={count ? `Cart, ${count} item${count > 1 ? "s" : ""}` : "Cart"}>
       <span aria-hidden="true">🛒</span>
-      {count > 0 && <span className="cart-badge">{count}</span>}
+      {count > 0 && <span key={count} className="cart-badge">{count}</span>}
     </Link>
   );
 }
@@ -183,6 +183,29 @@ function Footer() {
   );
 }
 
+/** Marks the header once the page scrolls, shows a back-to-top button, and draws a thin reading-progress bar. */
+function ScrollEffects() {
+  const [y, setY] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const on = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => {
+      setY(window.scrollY);
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      document.documentElement.style.setProperty("--progress", max > 0 ? String(window.scrollY / max) : "0");
+      document.querySelector(".header")?.classList.toggle("scrolled", window.scrollY > 8);
+    }); };
+    on();
+    window.addEventListener("scroll", on, { passive: true });
+    return () => { window.removeEventListener("scroll", on); cancelAnimationFrame(raf); };
+  }, []);
+  return (
+    <>
+      <div className="progress" aria-hidden="true" />
+      <button className={`to-top ${y > 700 ? "show" : ""}`} aria-label="Back to top" tabIndex={y > 700 ? 0 : -1} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>↑</button>
+    </>
+  );
+}
+
 export function Layout() {
   const location = useLocation();
   useEffect(() => {
@@ -192,9 +215,10 @@ export function Layout() {
     <>
       <a className="skip" href="#main">Skip to content</a>
       <Header />
-      <main id="main"><Outlet /></main>
+      <main id="main" key={location.pathname} className="route"><Outlet /></main>
       <Footer />
       <TabBar />
+      <ScrollEffects />
     </>
   );
 }

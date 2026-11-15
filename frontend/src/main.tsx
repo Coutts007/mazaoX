@@ -7,6 +7,7 @@ import { CartProvider } from "./cart/CartContext";
 import { ToastProvider } from "./components/Toasts";
 import "./styles/tokens.css";
 import "./styles/app.css";
+import "./styles/motion.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
