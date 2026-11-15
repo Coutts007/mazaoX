@@ -31,10 +31,22 @@ a test (`core/tests/test_boundaries.py`) fails if a domain imports another domai
 - Notifications and audit are driven by domain events (`core/events.py`), not by imports from business domains.
 - Enforced by `core/tests/test_boundaries.py` and `import-linter` (`cd backend && lint-imports`). See ADR-004.
 
+## Frontend (React + TypeScript + Vite) — `frontend/`
+Mobile-first SPA served by nginx on http://localhost:5180 (`docker compose up --build` starts it with the API).
+Design: see `docs/design/DESIGN_SYSTEM.md`. Dependencies are deliberately few: React, `react-router-dom`, Vite, TypeScript,
+Vitest + React Testing Library. The browser calls the API directly (CORS, `credentials: include`); use `localhost`, not `127.0.0.1`,
+so the httpOnly refresh cookie is sent. The access token is kept in memory only; reloading restores the session from the cookie.
+```bash
+cd frontend && cp .env.example .env && npm ci
+npm run dev        # http://localhost:5180 (API at VITE_API_URL)
+npm test           # Vitest
+npm run build      # type-check + production build
+```
+
 ## Run with Docker (recommended)
 ```bash
 cp .env.example .env                 # then set real local values (never commit .env)
-docker compose up --build            # db :5433, redis :6380, API :8010, scheduler (add -d to detach)
+docker compose up --build            # db :5433, redis :6380, API :8010, web app :5180, scheduler (add -d to detach)
 # optional synthetic demo data: set SEED_DEMO=true in .env before `up`, or:
 docker compose exec backend python manage.py seed_demo
 curl http://localhost:8010/api/v1/health

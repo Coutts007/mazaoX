@@ -1,0 +1,28 @@
+:root {
+  --forest-900: #0b3d0e;
+  --forest-700: #1e6b14;
+  --leaf-500: #44a206;
+  --lime-400: #a4e10a;
+  --orange-600: #d9520a;
+  --orange-500: #ff7a1a;
+  --amber-400: #ffb020;
+  --cream-50: #fbf8f1;
+  --cream-100: #f2eedf;
+  --sage-100: #e6f1dc;
+  --white: #fff;
+  --ink-900: #17210f;
+  --ink-600: #4b5a43;
+  --line: #e3dfd0;
+  --info-600: #1d5fa8;
+  --danger-600: #c62828;
+  --danger-100: #fde8e8;
+  --warn-100: #fff1d6;
+  --warn-700: #7a4b00;
+  --shadow-1: 0 1px 2px rgba(11, 61, 14, 0.08);
+  --shadow-2: 0 8px 24px rgba(11, 61, 14, 0.12);
+  --font-head: "Poppins", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --radius: 14px;
+  --header-h: 64px;
+  --tabbar-h: 62px;
+}
