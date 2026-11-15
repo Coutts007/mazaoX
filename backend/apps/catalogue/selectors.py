@@ -7,7 +7,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db.models import Q, QuerySet
 
-from apps.catalogue.models import Category, Listing, ListingStatus, QuantityUnit
+from apps.catalogue.models import Category, Listing, ListingMedia, ListingStatus, QuantityUnit
 from core.actor import Actor
 
 
@@ -25,6 +25,14 @@ class ListingSnapshot:
 
 def _publicly_visible(listing: Listing) -> bool:
     return listing.status == ListingStatus.ACTIVE and not listing.moderation_hidden and not listing.owner_suspended
+
+
+ORDERINGS = {
+    "newest": ("-created_at", "-id"),
+    "price_asc": ("price_per_unit", "-created_at"),
+    "price_desc": ("-price_per_unit", "-created_at"),
+    "harvest_newest": ("-harvest_date", "-created_at"),
+}
 
 
 def list_categories() -> QuerySet[Category]:
@@ -47,7 +55,7 @@ def get_listing_snapshot(listing_id) -> ListingSnapshot | None:
 
 def _get(listing_id) -> Listing | None:
     try:
-        return Listing.objects.select_related("category").filter(pk=listing_id).first()
+        return Listing.objects.select_related("category").prefetch_related("media").filter(pk=listing_id).first()
     except (ValueError, TypeError, ValidationError):  # malformed UUID
         return None
 
@@ -69,7 +77,7 @@ def get_listing(listing_id) -> Listing | None:
 
 
 def search_listings(filters: dict, actor: Actor | None = None) -> QuerySet[Listing]:
-    qs = Listing.objects.select_related("category")
+    qs = Listing.objects.select_related("category").prefetch_related("media")
     if filters.get("mine") and actor:
         qs = qs.filter(farmer_id=actor.id)
     else:
@@ -90,7 +98,9 @@ def search_listings(filters: dict, actor: Actor | None = None) -> QuerySet[Listi
         qs = qs.filter(quantity_unit=v)
     if v := filters.get("declared_grade"):
         qs = qs.filter(declared_grade__icontains=v)
-    return qs
+    if (ids := filters.get("listing_ids")) is not None:
+        qs = qs.filter(id__in=ids)
+    return qs.order_by(*ORDERINGS.get(filters.get("ordering") or "newest", ORDERINGS["newest"]))
 
 
 def list_for_moderation(filters: dict) -> QuerySet[Listing]:
@@ -119,3 +129,12 @@ def stats() -> dict:
 def quantity_units() -> list[str]:
     """Valid quantity units, for other domains to validate against without importing models."""
     return list(QuantityUnit.values)
+
+
+def get_public_media(media_id) -> ListingMedia | None:
+    """A photo, but only if its listing is publicly visible."""
+    try:
+        item = ListingMedia.objects.select_related("listing").filter(pk=media_id).first()
+    except (ValueError, TypeError, ValidationError):
+        return None
+    return item if item is not None and _publicly_visible(item.listing) else None

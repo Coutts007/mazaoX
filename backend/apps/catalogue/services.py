@@ -2,12 +2,22 @@
 
 from datetime import date
 
+import logging
+import uuid
+
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.db import transaction
 
 from apps.catalogue import selectors
-from apps.catalogue.models import Category, Listing, ListingStatus
+from apps.catalogue import media
+from apps.catalogue.models import Category, Listing, ListingMedia, ListingStatus
 from core.actor import Actor
-from core.errors import ForbiddenError, InvalidInputError, NotFoundError
+from core.errors import ConflictError, ForbiddenError, InvalidInputError, NotFoundError
+
+logger = logging.getLogger(__name__)
 from core.kenya import canonical_county
 
 EDITABLE = {
@@ -92,3 +102,49 @@ def moderate_listing(actor: Actor, listing_id, hide: bool, reason: str = "") -> 
 def set_owner_suspended(farmer_id, suspended: bool) -> int:
     """Called when a farmer account is suspended or reinstated: hides/shows all their listings."""
     return Listing.objects.filter(farmer_id=farmer_id).update(owner_suspended=suspended)
+
+
+@transaction.atomic
+def activate_listing(actor: Actor, listing_id) -> Listing:
+    """Re-list a deactivated listing. A listing hidden by an administrator stays hidden."""
+    listing = _owned_listing(actor, listing_id)
+    if listing.status != ListingStatus.ACTIVE:
+        listing.status = ListingStatus.ACTIVE
+        listing.save(update_fields=["status", "updated_at"])
+    return listing
+
+
+def add_media(actor: Actor, listing_id, uploaded) -> ListingMedia:
+    """Owning farmer uploads a photo. Validated and re-encoded; the stored name is generated."""
+    if actor.role != "farmer":
+        raise ForbiddenError("Only the owning farmer can upload photos.")
+    listing = selectors.get_listing(listing_id)
+    if listing is None or listing.farmer_id != actor.id:
+        raise NotFoundError("Listing not found.")
+    if listing.media.count() >= settings.MEDIA_MAX_PER_LISTING:
+        raise ConflictError(f"A listing can have at most {settings.MEDIA_MAX_PER_LISTING} photos.", "image", "TOO_MANY_PHOTOS")
+    clean = media.sanitise(uploaded)
+    name = default_storage.save(f"listings/{listing.id}/{uuid.uuid4().hex}.{clean.extension}", ContentFile(clean.data))
+    try:
+        return ListingMedia.objects.create(
+            listing=listing, storage_name=name, content_type=clean.content_type, size_bytes=len(clean.data),
+            width=clean.width, height=clean.height, position=listing.media.count(),
+        )
+    except Exception:
+        default_storage.delete(name)  # never leave an orphan file behind
+        raise
+
+
+@transaction.atomic
+def remove_media(actor: Actor, listing_id, media_id) -> None:
+    listing = _owned_listing(actor, listing_id)
+    try:
+        item = listing.media.get(pk=media_id)
+    except (ListingMedia.DoesNotExist, ValueError, ValidationError):
+        raise NotFoundError("Photo not found.")
+    name = item.storage_name
+    item.delete()
+    try:
+        default_storage.delete(name)
+    except Exception:  # noqa: BLE001 - a missing file must not fail the request
+        logger.exception("Could not delete stored file %s", name)

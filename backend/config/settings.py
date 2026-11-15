@@ -122,6 +122,12 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
+# Listing photos (stored outside PostgreSQL via Django's replaceable storage backend).
+MEDIA_MAX_BYTES = env.int("MEDIA_MAX_BYTES", default=5 * 1024 * 1024)
+MEDIA_MAX_PIXELS = 36_000_000
+MEDIA_MAX_PER_LISTING = 8
+DATA_UPLOAD_MAX_MEMORY_SIZE = 6 * 1024 * 1024  # request bodies larger than this are rejected early
+
 # Inventory: how long an unpaid order holds stock (minutes).
 RESERVATION_TTL_MINUTES = env.int("RESERVATION_TTL_MINUTES", default=15)
 

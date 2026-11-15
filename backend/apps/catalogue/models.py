@@ -30,7 +30,7 @@ class ListingStatus(models.TextChoices):
     INACTIVE = "inactive", "Inactive"  # deactivated by owner or admin
 
 
-class Listing(models.Model):
+class Listing(models.Model):  # noqa: D101
     """Descriptive and commercial listing data. Stock quantity is owned by Inventory, not here."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -61,3 +61,20 @@ class Listing(models.Model):
 
     def __str__(self):
         return self.produce_name
+
+
+class ListingMedia(models.Model):
+    """Metadata of one listing photo. The file lives in storage, never in PostgreSQL."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="media")
+    storage_name = models.CharField(max_length=255, unique=True)  # generated, never user-supplied
+    content_type = models.CharField(max_length=20)
+    size_bytes = models.PositiveIntegerField()
+    width = models.PositiveIntegerField()
+    height = models.PositiveIntegerField()
+    position = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["position", "created_at"]
