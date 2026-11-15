@@ -74,3 +74,132 @@ export interface PublicFarmer {
   bio: string;
   member_since: string;
 }
+
+export type OrderStatus = "pending_payment" | "paid" | "completed" | "cancelled" | "expired";
+
+export interface OrderLine {
+  listing_id: string;
+  produce_name: string;
+  unit_price: string;
+  quantity: string;
+  quantity_unit: string;
+  line_total: string;
+}
+
+export interface Order {
+  id: string;
+  buyer_id: string;
+  farmer_id: string;
+  status: OrderStatus;
+  delivery_method: "collection" | "delivery";
+  delivery_location: string;
+  total_amount: string;
+  currency: string;
+  lines: OrderLine[];
+  payment_due_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrderHistoryItem {
+  from_status: string;
+  to_status: string;
+  note: string;
+  created_at: string;
+}
+
+export interface PaymentAttempt {
+  id: string;
+  order_id: string;
+  amount: string;
+  currency: string;
+  status: "pending" | "succeeded" | "failed";
+  failure_reason: string;
+  mode: "simulated";
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface Delivery {
+  id: string;
+  order_id: string;
+  method: string;
+  location: string;
+  status: "pending" | "dispatched" | "delivered" | "failed";
+  events: { from_status: string; to_status: string; note: string; created_at: string }[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Notification {
+  id: string;
+  kind: string;
+  title: string;
+  message: string;
+  order_id: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface Issue {
+  id: string;
+  order_id: string;
+  category: "quality" | "delivery" | "payment" | "other";
+  description: string;
+  status: "open" | "investigating" | "resolved" | "dismissed";
+  resolution: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Review {
+  id: string;
+  order_id: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  reviewer_name?: string;
+}
+
+export interface ReviewList {
+  summary?: { average_rating: number | null; review_count: number; distribution: Record<string, number> };
+}
+
+export interface Inspection {
+  id: string;
+  listing_id: string;
+  source: string;
+  inspected_on: string;
+  scope: string;
+  result: string;
+  assessed_grade: string;
+  notes: string;
+  updated_at: string;
+}
+
+export interface DemandRequest {
+  id: string;
+  produce_name: string;
+  quantity: string;
+  quantity_unit: string;
+  target_price_per_unit: string | null;
+  county: string;
+  required_by: string;
+  status: "open" | "closed" | "expired";
+  created_at: string;
+}
+
+export interface Match {
+  score: number;
+  reasons: string[];
+  available: string;
+  listing: Listing;
+}
+
+export interface Profile {
+  county: string;
+  locality: string;
+  farm_name: string;
+  bio: string;
+  updated_at: string;
+}

@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-do
 import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import type { Role } from "../api/types";
+import { useCart } from "../cart/CartContext";
 
 interface NavItem {
   to: string;
@@ -67,6 +68,16 @@ function NotificationBell() {
   );
 }
 
+function CartButton() {
+  const { count } = useCart();
+  return (
+    <Link to="/cart" className="icon-btn" aria-label={count ? `Cart, ${count} item${count > 1 ? "s" : ""}` : "Cart"}>
+      <span aria-hidden="true">🛒</span>
+      {count > 0 && <span className="cart-badge">{count}</span>}
+    </Link>
+  );
+}
+
 function UserMenu() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
@@ -126,11 +137,13 @@ function Header() {
         <div className="hactions">
           {user ? (
             <>
+              {user.role === "buyer" && <CartButton />}
               <NotificationBell />
               <UserMenu />
             </>
           ) : (
             <>
+              <CartButton />
               <Link className="btn btn-ghost btn-sm" to="/register?role=farmer">Sell produce</Link>
               <Link className="btn btn-primary btn-sm" to="/login">Log in</Link>
             </>
