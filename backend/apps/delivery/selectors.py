@@ -17,3 +17,9 @@ def get_delivery(delivery_id) -> Delivery | None:
 
 def can_view(delivery: Delivery, actor: Actor) -> bool:
     return actor.is_admin or actor.id in (delivery.buyer_id, delivery.farmer_id)
+
+
+def stats() -> dict:
+    from django.db.models import Count
+
+    return {"by_status": {r["status"]: r["n"] for r in Delivery.objects.values("status").annotate(n=Count("id"))}}

@@ -26,3 +26,9 @@ def pending_attempt_for_order(order_id) -> PaymentAttempt | None:
 
 def list_attempts_for_order(order_id) -> QuerySet[PaymentAttempt]:
     return PaymentAttempt.objects.filter(order_id=order_id)
+
+
+def stats() -> dict:
+    from django.db.models import Count
+
+    return {"by_status": {r["status"]: r["n"] for r in PaymentAttempt.objects.values("status").annotate(n=Count("id"))}}

@@ -67,3 +67,11 @@ def list_orders(actor: Actor, status: str = "") -> QuerySet[Order]:
     elif not actor.is_admin:
         qs = qs.none()
     return qs.filter(status=status) if status else qs
+
+
+def stats() -> dict:
+    from django.db.models import Count, Sum
+
+    by_status = {r["status"]: r["n"] for r in Order.objects.values("status").annotate(n=Count("id"))}
+    revenue = Order.objects.filter(status__in=[OrderStatus.PAID, OrderStatus.COMPLETED]).aggregate(total=Sum("total_amount"))["total"]
+    return {"total": sum(by_status.values()), "by_status": by_status, "paid_value_ksh": str(revenue or Decimal("0.00"))}

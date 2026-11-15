@@ -47,6 +47,9 @@ class Listing(models.Model):
     locality = models.CharField(max_length=100, blank=True)
     harvest_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=10, choices=ListingStatus.choices, default=ListingStatus.ACTIVE, db_index=True)
+    moderation_hidden = models.BooleanField(default=False)  # hidden by an administrator
+    moderation_reason = models.CharField(max_length=255, blank=True)
+    owner_suspended = models.BooleanField(default=False)  # the farmer's account is suspended
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

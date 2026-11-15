@@ -43,8 +43,8 @@ def create_listing(actor: Actor, data: dict) -> Listing:
 
 def _owned_listing(actor: Actor, listing_id) -> Listing:
     listing = selectors.get_listing(listing_id)
-    # Non-owners get 404 for inactive listings they could not see anyway; active ones get 403.
-    if listing is None or (listing.status != ListingStatus.ACTIVE and not (actor.is_admin or actor.id == listing.farmer_id)):
+    # Non-owners get 404 for listings they could not see anyway; visible ones get 403.
+    if listing is None or (not selectors._publicly_visible(listing) and not (actor.is_admin or actor.id == listing.farmer_id)):
         raise NotFoundError("Listing not found.")
     if not (actor.is_admin or actor.id == listing.farmer_id):
         raise ForbiddenError("You can only change your own listings.")
@@ -70,3 +70,25 @@ def deactivate_listing(actor: Actor, listing_id) -> Listing:
         listing.status = ListingStatus.INACTIVE
         listing.save(update_fields=["status", "updated_at"])
     return listing
+
+
+@transaction.atomic
+def moderate_listing(actor: Actor, listing_id, hide: bool, reason: str = "") -> Listing:
+    """Administrators hide or restore a listing. Hiding requires a reason."""
+    if not actor.is_admin:
+        raise ForbiddenError("Only an administrator can moderate listings.")
+    reason = (reason or "").strip()
+    if hide and not reason:
+        raise InvalidInputError("A reason is required to hide a listing.", "reason")
+    listing = selectors.get_listing(listing_id)
+    if listing is None:
+        raise NotFoundError("Listing not found.")
+    listing.moderation_hidden = hide
+    listing.moderation_reason = reason[:255] if hide else ""
+    listing.save(update_fields=["moderation_hidden", "moderation_reason", "updated_at"])
+    return listing
+
+
+def set_owner_suspended(farmer_id, suspended: bool) -> int:
+    """Called when a farmer account is suspended or reinstated: hides/shows all their listings."""
+    return Listing.objects.filter(farmer_id=farmer_id).update(owner_suspended=suspended)

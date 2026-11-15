@@ -65,3 +65,19 @@ def get_active_user(user_id) -> User:
     if user is None or not user.is_active:
         raise IdentityError("Account unavailable.")
     return user
+
+
+def set_user_active(actor_id, actor_is_admin: bool, user_id, active: bool) -> User:
+    """Suspend (active=False) or reinstate a user. Administrators cannot change themselves or other admins."""
+    if not actor_is_admin:
+        raise IdentityError("Only an administrator can change account status.")
+    user = selectors.get_user_by_id(user_id)
+    if user is None:
+        raise IdentityError("User not found.", "user_id")
+    if user.id == actor_id:
+        raise IdentityError("You cannot change your own account status.", "user_id")
+    if user.role == Role.ADMIN:
+        raise IdentityError("Administrator accounts cannot be suspended here.", "user_id")
+    user.is_active = active
+    user.save(update_fields=["is_active"])
+    return user

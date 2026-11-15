@@ -23,6 +23,10 @@ class ListingSnapshot:
     is_active: bool
 
 
+def _publicly_visible(listing: Listing) -> bool:
+    return listing.status == ListingStatus.ACTIVE and not listing.moderation_hidden and not listing.owner_suspended
+
+
 def list_categories() -> QuerySet[Category]:
     return Category.objects.filter(is_active=True)
 
@@ -37,7 +41,7 @@ def get_listing_snapshot(listing_id) -> ListingSnapshot | None:
         produce_name=listing.produce_name,
         price_per_unit=listing.price_per_unit,
         quantity_unit=listing.quantity_unit,
-        is_active=listing.status == ListingStatus.ACTIVE,
+        is_active=_publicly_visible(listing),
     )
 
 
@@ -53,7 +57,7 @@ def get_visible_listing(listing_id, actor: Actor | None) -> Listing | None:
     listing = _get(listing_id)
     if listing is None:
         return None
-    if listing.status == ListingStatus.ACTIVE:
+    if _publicly_visible(listing):
         return listing
     if actor and (actor.is_admin or actor.id == listing.farmer_id):
         return listing
@@ -69,7 +73,7 @@ def search_listings(filters: dict, actor: Actor | None = None) -> QuerySet[Listi
     if filters.get("mine") and actor:
         qs = qs.filter(farmer_id=actor.id)
     else:
-        qs = qs.filter(status=ListingStatus.ACTIVE, category__is_active=True)
+        qs = qs.filter(status=ListingStatus.ACTIVE, moderation_hidden=False, owner_suspended=False, category__is_active=True)
     if q := filters.get("q"):
         qs = qs.filter(Q(produce_name__icontains=q) | Q(variety__icontains=q) | Q(description__icontains=q))
     if v := filters.get("category_id"):
@@ -87,3 +91,26 @@ def search_listings(filters: dict, actor: Actor | None = None) -> QuerySet[Listi
     if v := filters.get("declared_grade"):
         qs = qs.filter(declared_grade__icontains=v)
     return qs
+
+
+def list_for_moderation(filters: dict) -> QuerySet[Listing]:
+    """Every listing regardless of visibility (administrators only; callers enforce that)."""
+    qs = Listing.objects.select_related("category")
+    if v := filters.get("status"):
+        qs = qs.filter(status=v)
+    if (v := filters.get("hidden")) is not None:
+        qs = qs.filter(moderation_hidden=v)
+    if v := filters.get("q"):
+        qs = qs.filter(Q(produce_name__icontains=v) | Q(variety__icontains=v) | Q(description__icontains=v))
+    if v := filters.get("farmer_id"):
+        qs = qs.filter(farmer_id=v)
+    return qs
+
+
+def stats() -> dict:
+    return {
+        "total": Listing.objects.count(),
+        "active_visible": Listing.objects.filter(status=ListingStatus.ACTIVE, moderation_hidden=False, owner_suspended=False).count(),
+        "inactive": Listing.objects.filter(status=ListingStatus.INACTIVE).count(),
+        "hidden_by_admin": Listing.objects.filter(moderation_hidden=True).count(),
+    }

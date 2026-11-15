@@ -33,7 +33,8 @@ class ListingSerializer(serializers.ModelSerializer):
         fields = (
             "id", "farmer_id", "category", "produce_name", "variety", "description",
             "declared_grade", "grade_source", "grade_verified", "price_per_unit",
-            "quantity_unit", "county", "locality", "harvest_date", "status", "created_at", "updated_at",
+            "quantity_unit", "county", "locality", "harvest_date", "status", "moderation_hidden", "moderation_reason",
+            "created_at", "updated_at",
         )
 
     def get_grade_source(self, obj):
