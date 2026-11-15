@@ -202,7 +202,7 @@ export default function OrderDetail() {
         <div className="stack">
           {user?.role === "admin" && <DeliveryPanel order={o} delivery={delivery.data} onChanged={refresh} />}
           <section className="card card-pad stack" aria-label="Delivery">
-            <h3>{o.delivery_method === "delivery" ? "🚚 Delivery" : "🚜 Collection"}</h3>
+            <h3>{o.delivery_method === "delivery" ? "Delivery" : "Collection"}</h3>
             {o.delivery_location && <p>{o.delivery_location}</p>}
             {delivery.data ? (
               <>

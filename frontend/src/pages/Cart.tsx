@@ -112,8 +112,8 @@ export default function Cart() {
           <h2>Checkout</h2>
           <fieldset className="radios">
             <legend>How do you want to get it?</legend>
-            <label className={method === "collection" ? "on" : ""}><input type="radio" name="m" checked={method === "collection"} onChange={() => setMethod("collection")} /> 🚜 Collect from the farm</label>
-            <label className={method === "delivery" ? "on" : ""}><input type="radio" name="m" checked={method === "delivery"} onChange={() => setMethod("delivery")} /> 🚚 Deliver to me</label>
+            <label className={method === "collection" ? "on" : ""}><input type="radio" name="m" checked={method === "collection"} onChange={() => setMethod("collection")} /> Collect from the farm</label>
+            <label className={method === "delivery" ? "on" : ""}><input type="radio" name="m" checked={method === "delivery"} onChange={() => setMethod("delivery")} /> Deliver to me</label>
           </fieldset>
           {method === "delivery" && (
             <div className="field">

@@ -93,7 +93,7 @@ export default function Requests() {
           items.map((r) => (
             <div key={r.id} className="card card-pad stack">
               <div className="row"><b>{qty(r.quantity)} {r.quantity_unit} of {r.produce_name}</b><span className={`badge ${r.status === "open" ? "b-ok" : "b-off"}`}>{r.status}</span></div>
-              <p className="muted small">📍 {r.county} · Needed by {shortDate(r.required_by)}{r.target_price_per_unit ? ` · Target ${kes(r.target_price_per_unit)}/${r.quantity_unit}` : ""}</p>
+              <p className="muted small">{r.county} · Needed by {shortDate(r.required_by)}{r.target_price_per_unit ? ` · Target ${kes(r.target_price_per_unit)}/${r.quantity_unit}` : ""}</p>
               <div className="wrap-row"><button className="btn btn-ghost btn-sm" onClick={() => setViewing(r)}>See matches</button>{r.status === "open" && <button className="btn btn-text btn-sm" onClick={() => close(r)}>Close request</button>}</div>
             </div>
           ))}

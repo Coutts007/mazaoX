@@ -57,8 +57,8 @@ export default function Register() {
           <p className="lead">Fresh produce, straight from Kenyan farms.</p>
         </div>
         <div className="seg" role="group" aria-label="I want to">
-          <button type="button" aria-pressed={role === "buyer"} onClick={() => setRole("buyer")}>🛒 Buy produce</button>
-          <button type="button" aria-pressed={role === "farmer"} onClick={() => setRole("farmer")}>🌾 Sell produce</button>
+          <button type="button" aria-pressed={role === "buyer"} onClick={() => setRole("buyer")}>Buy produce</button>
+          <button type="button" aria-pressed={role === "farmer"} onClick={() => setRole("farmer")}>Sell produce</button>
         </div>
         {error && <div className="alert alert-error" role="alert">{error}</div>}
         <TextField label="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} error={fields.full_name} autoComplete="name" />

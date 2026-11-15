@@ -1,3 +1,4 @@
+import { Icon, type IconName } from "./Icon";
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
@@ -8,39 +9,39 @@ import { useCart } from "../cart/CartContext";
 interface NavItem {
   to: string;
   label: string;
-  icon: string;
+  icon: IconName;
   end?: boolean;
 }
 
 function navFor(role: Role | null): NavItem[] {
   if (role === "farmer")
     return [
-      { to: "/farm", label: "Farm", icon: "🌾", end: true },
-      { to: "/farm/listings", label: "Listings", icon: "🧺" },
-      { to: "/farm/orders", label: "Orders", icon: "🧾" },
-      { to: "/farm/demand", label: "Demand", icon: "📣" },
+      { to: "/farm", label: "Farm", icon: "farm", end: true },
+      { to: "/farm/listings", label: "Listings", icon: "list" },
+      { to: "/farm/orders", label: "Orders", icon: "orders" },
+      { to: "/farm/demand", label: "Demand", icon: "megaphone" },
     ];
   if (role === "admin")
     return [
-      { to: "/admin", label: "Overview", icon: "📊", end: true },
-      { to: "/admin/users", label: "Users", icon: "👥" },
-      { to: "/admin/listings", label: "Listings", icon: "🧺" },
-      { to: "/admin/orders", label: "Orders", icon: "🧾" },
-      { to: "/admin/issues", label: "Issues", icon: "🛟" },
-      { to: "/admin/reviews", label: "Reviews", icon: "⭐" },
-      { to: "/admin/audit", label: "Audit", icon: "📜" },
+      { to: "/admin", label: "Overview", icon: "chart", end: true },
+      { to: "/admin/users", label: "Users", icon: "users" },
+      { to: "/admin/listings", label: "Listings", icon: "list" },
+      { to: "/admin/orders", label: "Orders", icon: "orders" },
+      { to: "/admin/issues", label: "Issues", icon: "alert" },
+      { to: "/admin/reviews", label: "Reviews", icon: "star" },
+      { to: "/admin/audit", label: "Audit", icon: "log" },
     ];
   if (role === "buyer")
     return [
-      { to: "/", label: "Home", icon: "🏠", end: true },
-      { to: "/browse", label: "Browse", icon: "🔎" },
-      { to: "/orders", label: "Orders", icon: "🧾" },
-      { to: "/requests", label: "Requests", icon: "📣" },
+      { to: "/", label: "Home", icon: "home", end: true },
+      { to: "/browse", label: "Browse", icon: "search" },
+      { to: "/orders", label: "Orders", icon: "orders" },
+      { to: "/requests", label: "Requests", icon: "megaphone" },
     ];
   return [
-    { to: "/", label: "Home", icon: "🏠", end: true },
-    { to: "/browse", label: "Browse", icon: "🔎" },
-    { to: "/login", label: "Log in", icon: "🔑" },
+    { to: "/", label: "Home", icon: "home", end: true },
+    { to: "/browse", label: "Browse", icon: "search" },
+    { to: "/login", label: "Log in", icon: "key" },
   ];
 }
 
@@ -65,7 +66,7 @@ function NotificationBell() {
   }, []);
   return (
     <Link to="/notifications" className="icon-btn" aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}>
-      <span aria-hidden="true">🔔</span>
+      <Icon name="bell" />
       {unread > 0 && <span className="dot">{unread > 99 ? "99+" : unread}</span>}
     </Link>
   );
@@ -75,7 +76,7 @@ function CartButton() {
   const { count } = useCart();
   return (
     <Link to="/cart" className="icon-btn" aria-label={count ? `Cart, ${count} item${count > 1 ? "s" : ""}` : "Cart"}>
-      <span aria-hidden="true">🛒</span>
+      <Icon name="cart" />
       {count > 0 && <span key={count} className="cart-badge">{count}</span>}
     </Link>
   );
@@ -130,7 +131,7 @@ function Header() {
         <Link to="/" className="brand" aria-label="MazaoX home"><img src="/logo.png" alt="MazaoX" /></Link>
         {user?.role !== "admin" && (
           <form className="hsearch" role="search" onSubmit={(e) => { e.preventDefault(); navigate(`/browse${q.trim() ? `?q=${encodeURIComponent(q.trim())}` : ""}`); }}>
-            <span aria-hidden="true">🔍</span>
+            <Icon name="search" size={18} />
             <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search tomatoes, maize, kale…" aria-label="Search produce" />
           </form>
         )}
@@ -164,7 +165,7 @@ function TabBar() {
     <nav className="tabbar" aria-label="Main">
       {items.map((i) => (
         <NavLink key={i.to} to={i.to} end={i.end} className={({ isActive }) => (isActive ? "active" : "")}>
-          <b aria-hidden="true">{i.icon}</b>
+          <Icon name={i.icon} size={22} />
           {i.label}
         </NavLink>
       ))}
@@ -183,15 +184,13 @@ function Footer() {
   );
 }
 
-/** Marks the header once the page scrolls, shows a back-to-top button, and draws a thin reading-progress bar. */
+/** Marks the header once the page scrolls, and shows a back-to-top button. */
 function ScrollEffects() {
   const [y, setY] = useState(0);
   useEffect(() => {
     let raf = 0;
     const on = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => {
       setY(window.scrollY);
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      document.documentElement.style.setProperty("--progress", max > 0 ? String(window.scrollY / max) : "0");
       document.querySelector(".header")?.classList.toggle("scrolled", window.scrollY > 8);
     }); };
     on();
@@ -200,7 +199,6 @@ function ScrollEffects() {
   }, []);
   return (
     <>
-      <div className="progress" aria-hidden="true" />
       <button className={`to-top ${y > 700 ? "show" : ""}`} aria-label="Back to top" tabIndex={y > 700 ? 0 : -1} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>↑</button>
     </>
   );

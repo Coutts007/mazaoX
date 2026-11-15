@@ -28,7 +28,7 @@ export default function DemandMarket() {
             <div key={r.id} className="card card-pad stack">
               <b className="price">{qty(r.quantity)} {r.quantity_unit}</b>
               <h3>{r.produce_name}</h3>
-              <p className="muted small">📍 {r.county} · needed by {shortDate(r.required_by)}</p>
+              <p className="muted small">{r.county} · needed by {shortDate(r.required_by)}</p>
               {r.target_price_per_unit && <span className="badge b-ok" style={{ justifySelf: "start" }}>Target {kes(r.target_price_per_unit)} / {r.quantity_unit}</span>}
             </div>
           ))}

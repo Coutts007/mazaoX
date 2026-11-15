@@ -7,7 +7,6 @@ import { useToast } from "../components/Toasts";
 import { timeAgo } from "../lib/format";
 import { useAsync } from "../lib/useAsync";
 
-const ICON: Record<string, string> = { order_placed: "🧾", order_received: "📥", order_paid: "💰", payment_received: "✅", payment_failed: "⚠️", order_cancelled: "🚫", order_expired: "⏰", review_received: "⭐", issue_updated: "🛟", demand_match: "📣" };
 
 export default function Notifications() {
   const [params, setParams] = useSearchParams();
@@ -49,7 +48,7 @@ export default function Notifications() {
           items.length === 0 ? <EmptyState icon="🔔" title={unreadOnly ? "Nothing unread" : "No notifications yet"}>Order and payment updates will show up here.</EmptyState> :
           items.map((n) => (
             <button key={n.id} className={`card card-pad card-hover notif ${n.is_read ? "" : "unread"}`} onClick={() => open(n)}>
-              <span className="notif-icon" aria-hidden="true">{ICON[n.kind] ?? (n.kind.startsWith("delivery") ? "🚚" : "🔔")}</span>
+              <span className="notif-dot" aria-hidden="true" />
               <span className="grow"><b>{n.title}</b><span className="muted small" style={{ display: "block" }}>{n.message}</span></span>
               <span className="muted small">{timeAgo(n.created_at)}</span>
               {!n.is_read && <span className="unread-dot" aria-label="Unread" />}

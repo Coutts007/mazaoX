@@ -30,7 +30,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
       </div>
       <div className="body">
         <h3>{listing.produce_name}{listing.variety ? <span className="muted small"> · {listing.variety}</span> : null}</h3>
-        <span className="muted small">📍 {place || "Kenya"}</span>
+        <span className="muted small">{place || "Kenya"}</span>
         <span className="price">{kes(listing.price_per_unit)} <small>/ {listing.quantity_unit}</small></span>
         <GradeBadge listing={listing} />
       </div>

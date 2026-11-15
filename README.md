@@ -36,6 +36,8 @@ Mobile-first SPA served by nginx on http://localhost:5180 (`docker compose up --
 Design: see `docs/design/DESIGN_SYSTEM.md`. Dependencies are deliberately few: React, `react-router-dom`, Vite, TypeScript,
 Vitest + React Testing Library. The browser calls the API directly (CORS, `credentials: include`); use `localhost`, not `127.0.0.1`,
 so the httpOnly refresh cookie is sent. The access token is kept in memory only; reloading restores the session from the cookie.
+**Site images:** put your own images in `frontend/public/images/` (file names and sizes are in `frontend/src/config/images.ts` and `frontend/public/images/README.md`). Missing files are skipped. Farmers' listing photos are uploaded by users and are not stored there.
+
 Screens by role (all authorization is enforced by the API; the UI only hides what a role cannot use):
 - **Visitors / buyers:** browse and filter produce (filters live in the URL), listing detail with farmer-declared vs independently inspected quality,
   cart (one farmer per order), checkout with an idempotency key, simulated M-Pesa payment with countdown, orders, notifications, demand requests, reviews, issues.

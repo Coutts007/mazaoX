@@ -79,7 +79,7 @@ function Inspections({ listingId }: { listingId: string }) {
       ) : (
         items.map((i) => (
           <div key={i.id} className="alert alert-info">
-            <b>✓ Independently inspected on {shortDate(i.inspected_on)}</b>: {i.result.replace(/_/g, " ")}{i.assessed_grade ? `, assessed grade ${i.assessed_grade}` : ""}.
+            <b>Independently inspected on {shortDate(i.inspected_on)}</b>: {i.result.replace(/_/g, " ")}{i.assessed_grade ? `, assessed grade ${i.assessed_grade}` : ""}.
             <div className="small">Scope: {i.scope}{i.notes ? ` · ${i.notes}` : ""}</div>
           </div>
         ))
@@ -126,7 +126,7 @@ export default function ListingDetail() {
         <div className="stack">
           <div>
             <h1>{l.produce_name}{l.variety ? <span className="muted"> · {l.variety}</span> : null}</h1>
-            <p className="muted">📍 {place || "Kenya"}{l.harvest_date ? ` · Harvested ${shortDate(l.harvest_date)}` : ""}</p>
+            <p className="muted">{place || "Kenya"}{l.harvest_date ? ` · Harvested ${shortDate(l.harvest_date)}` : ""}</p>
           </div>
           <div className="price-big">{kes(l.price_per_unit)} <small>per {l.quantity_unit}</small></div>
           <div className="wrap-row"><StockBadge listing={l} /><GradeBadge listing={l} /></div>
@@ -150,7 +150,7 @@ export default function ListingDetail() {
                 </div>
                 {available !== null && quantity >= Math.floor(available) && <p className="muted small">That's everything available ({qty(available)} {l.quantity_unit}).</p>}
                 <div className="wrap-row">
-                  <button className="btn btn-primary grow" onClick={() => addToCart(false)}>🛒 Add to cart</button>
+                  <button className="btn btn-primary grow" onClick={() => addToCart(false)}>Add to cart</button>
                   <button className="btn btn-accent grow" onClick={() => addToCart(true)}>Buy now</button>
                 </div>
                 <p className="muted small">The final price is confirmed by the server when you place the order. Stock is held for 15 minutes while you pay.</p>

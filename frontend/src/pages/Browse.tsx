@@ -135,11 +135,10 @@ export default function Browse() {
           <h1>Fresh produce</h1>
           <p className="muted" aria-live="polite">{result.loading && !result.data ? "Searching…" : `${total} ${total === 1 ? "listing" : "listings"}${activeFilters.length ? " match your search" : " available"}`}</p>
         </div>
-        <button className="btn btn-ghost btn-sm filters-btn" onClick={() => setSheet(true)}>⚙ Filters{activeFilters.filter((f) => f.key !== "q").length ? ` (${activeFilters.filter((f) => f.key !== "q").length})` : ""}</button>
+        <button className="btn btn-ghost btn-sm filters-btn" onClick={() => setSheet(true)}>Filters{activeFilters.filter((f) => f.key !== "q").length ? ` (${activeFilters.filter((f) => f.key !== "q").length})` : ""}</button>
       </div>
 
       <div className="search-big">
-        <span aria-hidden="true">🔍</span>
         <input className="input" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search tomatoes, kale, maize…" aria-label="Search produce" />
       </div>
 

@@ -14,10 +14,9 @@ export function Skeleton({ className = "", style }: { className?: string; style?
   return <div className={`skeleton ${className}`} style={style} aria-hidden="true" />;
 }
 
-export function EmptyState({ icon = "🌱", title, children, action }: { icon?: string; title: string; children?: ReactNode; action?: { to: string; label: string } }) {
+export function EmptyState({ title, children, action }: { icon?: string; title: string; children?: ReactNode; action?: { to: string; label: string } }) {
   return (
     <div className="empty">
-      <div className="empty-icon" aria-hidden="true">{icon}</div>
       <h3>{title}</h3>
       {children && <p>{children}</p>}
       {action && <Link className="btn btn-primary" to={action.to}>{action.label}</Link>}
@@ -28,7 +27,6 @@ export function EmptyState({ icon = "🌱", title, children, action }: { icon?: 
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <div className="empty" role="alert">
-      <div className="empty-icon" aria-hidden="true">⚠️</div>
       <h3>That didn't work</h3>
       <p>{message}</p>
       {onRetry && <button className="btn btn-ghost" onClick={onRetry}>Try again</button>}

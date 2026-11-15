@@ -22,7 +22,7 @@
   --shadow-2: 0 8px 24px rgba(11, 61, 14, 0.12);
   --font-head: "Poppins", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
-  --radius: 14px;
+  --radius: 10px;
   --header-h: 64px;
   --tabbar-h: 62px;
 }

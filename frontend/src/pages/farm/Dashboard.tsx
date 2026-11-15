@@ -57,10 +57,10 @@ export default function FarmDashboard() {
         </section>
         <section className="card card-pad stack" aria-label="Stock alerts">
           <h3>Needs attention</h3>
-          {low.length === 0 && my.length > 0 && <p className="muted">All your listings have healthy stock. 🌱</p>}
+          {low.length === 0 && my.length > 0 && <p className="muted">All your listings have healthy stock.</p>}
           {my.length === 0 && !loading && <p className="muted">You haven't listed anything yet. <Link to="/farm/listings/new">Create your first listing</Link> to start selling.</p>}
           {low.map((l) => <Link key={l.id} to={`/farm/listings/${l.id}`} className="alert alert-warn">{l.produce_name}: only {qty(l.availability!.available)} {l.quantity_unit} left. <b>Add stock</b></Link>)}
-          <Link to="/farm/demand" className="btn btn-ghost btn-sm" style={{ justifySelf: "start" }}>📣 See what buyers are asking for</Link>
+          <Link to="/farm/demand" className="btn btn-ghost btn-sm" style={{ justifySelf: "start" }}>See what buyers are asking for</Link>
         </section>
       </div>
     </div>
