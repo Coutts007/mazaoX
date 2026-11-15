@@ -66,3 +66,51 @@ body{background:
 }
 .hero-card .btn-ghost{color:#fff;border:1.5px solid rgba(255,255,255,.7);background:rgba(255,255,255,.1);text-shadow:0 1px 6px rgba(0,0,0,.3)}
 .hero-card .btn-ghost:hover{background:rgba(255,255,255,.22)}
+
+/* ---------- glass across the whole system ---------- */
+:root{--glass-fill:rgba(255,255,255,.55);--glass-edge:rgba(255,255,255,.75);--glass-soft:0 4px 18px rgba(11,61,14,.10), inset 0 1px 0 rgba(255,255,255,.6)}
+
+/* fields */
+.input,.select,.textarea,.qty,.qty input{background:rgba(255,255,255,.55);border-color:rgba(255,255,255,.8);box-shadow:inset 0 1px 2px rgba(11,61,14,.06)}
+.input:focus,.select:focus,.textarea:focus{background:rgba(255,255,255,.8)}
+.hero-search .btn{border-radius:0}
+
+/* surfaces that were still solid */
+.card,.lcard,.kpi,.trust div,.how .step,.buybox,.summary,.cat i{box-shadow:var(--glass-soft)}
+.how .step,.cat i{background:rgba(255,255,255,.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--glass-edge)}
+.seg{background:rgba(255,255,255,.4);border:1px solid var(--glass-edge);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.seg button[aria-pressed="true"]{background:rgba(255,255,255,.85)}
+.chip{background:rgba(255,255,255,.5);border:1px solid var(--glass-edge);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.chip.on{background:rgba(30,107,20,.88);border-color:rgba(255,255,255,.35)}
+.alert{border:1px solid rgba(255,255,255,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.alert-error{background:rgba(253,232,232,.78)}.alert-warn{background:rgba(255,241,214,.78)}
+.alert-info{background:rgba(220,234,250,.78)}.alert-ok{background:rgba(230,241,220,.78)}
+.photo-item{background:rgba(255,255,255,.4);border:1px solid var(--glass-edge)}
+.pay{border:1.5px solid rgba(68,162,6,.7)}
+
+/* buttons */
+.btn-ghost{background:rgba(255,255,255,.4);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.btn-primary{box-shadow:0 4px 14px rgba(30,107,20,.28), inset 0 1px 0 rgba(255,255,255,.25)}
+
+/* tables */
+table{background:rgba(255,255,255,.45);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:var(--radius);border-collapse:separate;border-spacing:0}
+th,td{border-bottom-color:rgba(255,255,255,.7)}
+
+/* overlays */
+.modal-back{background:rgba(11,40,14,.35);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.modal{border:1px solid var(--glass-edge);box-shadow:0 -8px 40px rgba(11,61,14,.2)}
+.toast{background:rgba(11,61,14,.82);border:1px solid rgba(255,255,255,.25)}
+.toast-error{background:rgba(127,29,29,.85)}
+
+/* footer */
+.footer{background:rgba(11,61,14,.86);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border-top:1px solid rgba(255,255,255,.25)}
+.footer img{background:rgba(255,255,255,.85)}
+
+/* subtle depth: glass lifts on hover where cards are links */
+.lcard,.kpi,.cat{transition:transform .2s,box-shadow .2s,background .2s}
+.lcard:hover,a.kpi:hover{background:rgba(255,255,255,.75);box-shadow:0 10px 28px rgba(11,61,14,.16)}
+
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .input,.select,.textarea,.qty,.qty input,.seg,.chip,table,.how .step,.cat i,.modal,.alert{background:#fff}
+  .footer{background:var(--forest-900)}
+}
