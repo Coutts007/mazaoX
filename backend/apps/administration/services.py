@@ -9,6 +9,7 @@ from apps.audit.services import record
 from apps.catalogue import selectors as catalogue_selectors
 from apps.catalogue import services as catalogue
 from apps.delivery import selectors as delivery_selectors
+from apps.demand import selectors as demand_selectors
 from apps.identity import selectors as identity_selectors
 from apps.identity import services as identity
 from apps.issues import selectors as issue_selectors
@@ -81,4 +82,5 @@ def summary(actor: Actor) -> dict:
         "issues": issue_selectors.stats(),
         "reviews": review_selectors.stats(),
         "inspections": quality_selectors.stats(),
+        "demand_requests": demand_selectors.stats(),
     }

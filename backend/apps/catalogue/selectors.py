@@ -7,7 +7,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db.models import Q, QuerySet
 
-from apps.catalogue.models import Category, Listing, ListingStatus
+from apps.catalogue.models import Category, Listing, ListingStatus, QuantityUnit
 from core.actor import Actor
 
 
@@ -114,3 +114,8 @@ def stats() -> dict:
         "inactive": Listing.objects.filter(status=ListingStatus.INACTIVE).count(),
         "hidden_by_admin": Listing.objects.filter(moderation_hidden=True).count(),
     }
+
+
+def quantity_units() -> list[str]:
+    """Valid quantity units, for other domains to validate against without importing models."""
+    return list(QuantityUnit.values)

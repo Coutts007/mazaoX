@@ -115,4 +115,4 @@ def market(make_user, make_listing, auth_client, settings):
         return order
 
     return SimpleNamespace(farmer=farmer, buyer=buyer, admin=admin, listing=listing, place=place, pay=pay,
-                           complete=complete, client=auth_client, make_user=make_user)
+                           complete=complete, client=auth_client, make_user=make_user, make_listing=make_listing)

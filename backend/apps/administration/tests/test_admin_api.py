@@ -114,7 +114,7 @@ def test_summary_report(market):
     assert body["orders"]["paid_value_ksh"] == "850.00"
     assert body["listings"]["total"] == 1 and body["payments"]["by_status"] == {"succeeded": 1}
     assert body["deliveries"]["by_status"] == {"delivered": 1}
-    assert set(body) == {"users", "listings", "orders", "payments", "deliveries", "issues", "reviews", "inspections"}
+    assert set(body) == {"users", "listings", "orders", "payments", "deliveries", "issues", "reviews", "inspections", "demand_requests"}
 
 
 def test_audit_log_listing_and_secrets_stripped(market):

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "apps.audit",
     "apps.quality",
     "apps.administration",
+    "apps.demand",
 ]
 
 MIDDLEWARE = [
