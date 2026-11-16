@@ -178,7 +178,9 @@ function Footer() {
     <footer className="footer">
       <div className="wrap">
         <img src="/logo.png" alt="MazaoX" />
-        <p>MazaoX is an academic prototype. Payments are simulated and no real money moves. Demo data only.</p>
+        <p>MazaoX, Your Agricultural MarketPlace. All rights reserved.</p>
+        <img src="/sifa.png" alt="Sifa"/> 
+        <p>Sifa @ 2026.</p>
       </div>
     </footer>
   );
